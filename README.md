@@ -72,6 +72,3 @@ Wait, Kasir has identical experience but is strictly blocked from the Owner Dash
 - `/app/(dashboard)`: Layout defining the persistent sidebar and pages.
 - `/components`: Interactive client-side components (`MenuGrid`, `DraftBar`, Modals) keeping server components clean.
 - `/store`: Zustand stores `useCartStore` and `useDraftStore`.
-
----
-*Built with ❤️ utilizing Advanced GenAI code-pairing workflow.*
