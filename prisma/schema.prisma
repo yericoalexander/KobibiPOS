@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(KASIR)
+  storeId   String
+  active    Boolean  @default(true)
+  store     Store    @relation(fields: [storeId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+}
+
+model Store {
+  id              String     @id @default(cuid())
+  name            String
+  address         String?
+  phone           String?
+  currency        String     @default("IDR")
+  receiptFooter   String     @default("Terima Kasih!")
+  createdAt       DateTime   @default(now())
+  users           User[]
+  categories      Category[]
+  products        Product[]
+  orders          Order[]
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  storeId   String
+  store     Store     @relation(fields: [storeId], references: [id])
+  products  Product[]
+  createdAt DateTime  @default(now())
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  price       Float
+  emoji       String?
+  storeId     String
+  categoryId  String?
+  active      Boolean     @default(true)
+  stock       Int         @default(0)
+  costPrice   Float       @default(0)
+  store       Store       @relation(fields: [storeId], references: [id])
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(DRAFT)
+  storeId       String
+  cashierId     String
+  subtotal      Float
+  total         Float
+  totalProfit   Float       @default(0)
+  amountPaid    Float?
+  change        Float?
+  paymentMethod String?
+  customerName  String?
+  tableNumber   String?
+  paidAt        DateTime?
+  store         Store       @relation(fields: [storeId], references: [id])
+  cashier       User        @relation(fields: [cashierId], references: [id])
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  name        String
+  price       Float
+  costPrice   Float    @default(0)
+  qty         Int
+  subtotal    Float
+  profit      Float    @default(0)
+  note        String?
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  KASIR
+}
+
+enum OrderStatus {
+  DRAFT
+  UNPAID
+  PAID
+  VOID
+}
