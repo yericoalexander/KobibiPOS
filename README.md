@@ -1,4 +1,4 @@
-# FibrPOS Clone - Full Stack POS System
+# Full Stack POS System
 
 A modern, production-ready Point of Sale (POS) system inspired by FibrPOS. Built with Next.js 14, Tailwind CSS, PostgreSQL, and Prisma.
 
