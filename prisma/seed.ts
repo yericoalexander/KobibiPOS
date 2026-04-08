@@ -20,7 +20,17 @@ async function main() {
 
   console.log('✓ Store created:', store.name);
 
-  // 2. Create Owner User (Hanya 1 user owner untuk login pertama kali)
+  // 2. Create default category
+  const category = await prisma.category.create({
+    data: {
+      name: 'Umum',
+      storeId: store.id,
+    },
+  });
+
+  console.log('✓ Default category created:', category.name);
+
+  // 3. Create Owner User (Hanya 1 user owner untuk login pertama kali)
   const owner = await prisma.user.create({
     data: {
       name: 'Owner',
