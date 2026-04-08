@@ -5,7 +5,7 @@ import MenuGrid from "./MenuGrid";
 import OrderPanel from "./OrderPanel";
 import DraftBar from "./DraftBar";
 import CategoryFilter from "./CategoryFilter";
-import { Plus, ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 
 export default function PosContainer({ products, categories }: { products: any[], categories: any[] }) {
