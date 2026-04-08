@@ -1,17 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import MenuGrid from "./MenuGrid";
 import OrderPanel from "./OrderPanel";
 import DraftBar from "./DraftBar";
 import CategoryFilter from "./CategoryFilter";
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, X, Settings, LogOut, User, Menu as MenuIcon } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 
-export default function PosContainer({ products, categories }: { products: any[], categories: any[] }) {
+export default function PosContainer({ 
+  products, 
+  categories,
+  user = { role: 'KASIR' }
+}: { 
+  products: any[];
+  categories: any[];
+  user?: { role: string };
+}) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
 
   const { items } = useCartStore();
   const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
@@ -22,6 +34,11 @@ export default function PosContainer({ products, categories }: { products: any[]
     const matchCategory = activeCategory ? p.categoryId === activeCategory : true;
     return matchSearch && matchCategory;
   });
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push("/login");
+  };
 
   return (
     <div className="flex flex-col h-full bg-[var(--color-bg)] text-[var(--color-text)]">
@@ -39,6 +56,63 @@ export default function PosContainer({ products, categories }: { products: any[]
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+            </div>
+            
+            {/* Menu Dropdown Button */}
+            <div className="relative">
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl transition-all active:scale-95"
+              >
+                <MenuIcon size={20} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isMenuOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[var(--color-accent)]/10 rounded-full flex items-center justify-center">
+                          <User size={20} className="text-[var(--color-accent)]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-bold truncate">{user.role}</p>
+                          <p className="text-xs text-[var(--color-text-muted)] truncate">Menu Akun</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          router.push("/settings");
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[var(--color-surface-2)] rounded-lg transition-colors text-left"
+                      >
+                        <Settings size={18} className="text-[var(--color-text-muted)]" />
+                        <span className="text-sm font-medium">Pengaturan</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors text-left"
+                      >
+                        <LogOut size={18} />
+                        <span className="text-sm font-medium">Keluar</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           

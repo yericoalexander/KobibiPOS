@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("password123");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -40,13 +40,20 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-8 text-center space-y-2">
-          <h1 className="text-3xl font-bold bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">
-            FibrPOS
-          </h1>
-          <p className="text-[var(--color-text-muted)]">
-            Sistem Kasir Modern Terpercaya
-          </p>
+        <div className="p-8 text-center space-y-4">
+          <div className="flex justify-center mb-2">
+            <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-yellow-300 rounded-full shadow-xl flex items-center justify-center">
+              <span className="text-4xl font-bold text-white">NK</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">
+              NGANGKRING KOBIBI
+            </h1>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+              Spesial Sate Satean
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleLogin} className="p-8 space-y-6 pt-0">
@@ -82,7 +89,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[var(--color-accent)] hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/20 flex inset-x-0 items-center justify-center"
+            className="w-full bg-[var(--color-accent)] hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 shadow-lg shadow-amber-500/20 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Masuk"}
           </button>

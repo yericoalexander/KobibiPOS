@@ -7,6 +7,13 @@ export default async function KasirPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  console.log('=== SESSION DEBUG ===');
+  console.log('User ID:', session.user.id);
+  console.log('User Email:', session.user.email);
+  console.log('User Role:', (session.user as any).role);
+  console.log('Store ID:', (session.user as any).storeId);
+  console.log('====================');
+
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
       where: { storeId: session.user.storeId, active: true },
@@ -21,7 +28,13 @@ export default async function KasirPage() {
 
   return (
     <div className="h-full flex flex-col pt-4 overflow-hidden">
-      <PosContainer products={products} categories={categories} />
+      <PosContainer 
+        products={products} 
+        categories={categories}
+        user={{
+          role: session.user.role || 'KASIR'
+        }}
+      />
     </div>
   );
 }

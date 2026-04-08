@@ -19,12 +19,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       {/* DESKTOP SIDEBAR */}
       <aside className="hidden md:flex w-64 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-col transition-all duration-300 z-20 shadow-xl shrink-0">
         <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-[var(--color-border)]">
-          <div className="w-10 h-10 bg-gradient-to-br from-[var(--color-accent)] to-yellow-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <span className="font-bold text-white text-xl">F</span>
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg shrink-0 p-1">
+            <img src="/kobibi.jpeg" alt="NGANGKRING KOBIBI" className="w-full h-full object-cover rounded-full" />
           </div>
-          <span className="hidden lg:block ml-4 text-xl font-bold bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">
-            FibrPOS
-          </span>
+          <div className="hidden lg:block ml-3">
+            <p className="text-base font-bold leading-tight bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">
+              NGANGKRING
+            </p>
+            <p className="text-xs font-semibold text-[var(--color-text-muted)]">KOBIBI</p>
+          </div>
         </div>
 
         <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
