@@ -24,6 +24,13 @@
 .DS_Store
 *.pem
 
+# macOS metadata files
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
 # debug
 npm-debug.log*
 yarn-debug.log*
