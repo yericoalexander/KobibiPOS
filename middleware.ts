@@ -21,7 +21,8 @@ export default auth((req) => {
   }
 
   // Role checks
-  const role = token.role as string;
+  // req.auth in NextAuth v5 contains the session object (req.auth.user.role)
+  const role = (token as any)?.user?.role || (token as any)?.role;
 
   if (path.startsWith("/users") && role !== "OWNER") {
     return NextResponse.redirect(new URL("/kasir", req.url));

@@ -12,13 +12,24 @@ export async function GET(req: Request) {
 
     const storeId = session.user.storeId;
     
-    // Get start of today
+    const url = new URL(req.url);
+    const dateParam = url.searchParams.get('date');
+
+    // Get start and end of selected date explicitly handling local time zones
     const startOfDay = new Date();
+    if (dateParam) {
+      const [year, month, day] = dateParam.split('-');
+      startOfDay.setFullYear(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
     startOfDay.setHours(0, 0, 0, 0);
 
-    const [todayOrders, unpaidCount, productsData, allOrders] = await Promise.all([
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const [dateOrders, unpaidCount, productsData, allOrders] = await Promise.all([
       prisma.order.findMany({
-        where: { storeId, status: OrderStatus.PAID, createdAt: { gte: startOfDay } },
+        where: { storeId, status: OrderStatus.PAID, createdAt: { gte: startOfDay, lte: endOfDay } },
+        orderBy: { createdAt: 'desc' }
       }),
       prisma.order.count({
         where: { storeId, status: OrderStatus.UNPAID },
@@ -32,22 +43,24 @@ export async function GET(req: Request) {
       })
     ]);
 
-    const totalRevenueToday = todayOrders.reduce((sum, o) => sum + o.total, 0);
-    const totalProfitToday = todayOrders.reduce((sum, o) => sum + o.totalProfit, 0);
-    const transactionsTodayCount = todayOrders.length;
-    const avgValue = transactionsTodayCount > 0 ? totalRevenueToday / transactionsTodayCount : 0;
+    const totalRevenue = dateOrders.reduce((sum, o) => sum + o.total, 0);
+    const totalProfit = dateOrders.reduce((sum, o) => sum + o.totalProfit, 0);
+    const totalCapital = totalRevenue - totalProfit;
+    const transactionsCount = dateOrders.length;
+    const avgValue = transactionsCount > 0 ? totalRevenue / transactionsCount : 0;
 
-    // Top products
+    // Top products for that date
     const productStats = productsData.map(p => {
-      const sold = p.orderItems.filter(oi => oi.order.status === 'PAID').reduce((sum, oi) => sum + oi.qty, 0);
+      const sold = p.orderItems.filter(oi => oi.order.status === 'PAID' && oi.order.createdAt >= startOfDay && oi.order.createdAt <= endOfDay).reduce((sum, oi) => sum + oi.qty, 0);
       return { name: p.name, sold };
-    }).sort((a, b) => b.sold - a.sold).slice(0, 5);
+    }).filter(p => p.sold > 0).sort((a, b) => b.sold - a.sold).slice(0, 5);
 
     return NextResponse.json({
       summary: {
-        totalRevenueToday,
-        totalProfitToday,
-        transactionsTodayCount,
+        totalRevenue,
+        totalProfit,
+        totalCapital,
+        transactionsCount,
         avgValue,
         unpaidCount
       },
@@ -57,13 +70,14 @@ export async function GET(req: Request) {
         revenue: o.total,
         profit: o.totalProfit
       })),
-      transactions: allOrders.map(o => ({
+      transactions: dateOrders.map(o => ({
         id: o.orderNumber,
         date: o.createdAt.toLocaleString('id-ID'),
         customer: o.customerName || 'Guest',
         total: o.total,
-        profit: o.totalProfit
-      })).reverse()
+        profit: o.totalProfit,
+        capital: o.total - o.totalProfit
+      }))
     });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -72,7 +72,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         {(role === "OWNER" || role === "ADMIN") && (
           <MobileNavItem href="/products" icon={<Package size={20} />} label="Produk" />
         )}
-        <MobileNavItem href="/settings" icon={<Menu size={20} />} label="Menu" />
+        {role === "OWNER" && (
+          <MobileNavItem href="/reports" icon={<LayoutDashboard size={20} />} label="Laporan" />
+        )}
       </nav>
 
       {/* MAIN CONTENT */}
