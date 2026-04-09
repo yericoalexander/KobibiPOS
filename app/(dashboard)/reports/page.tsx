@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Mail, TrendingUp, DollarSign, ShoppingCart } from "lucide-react";
+import { Mail, TrendingUp, DollarSign, ShoppingCart, FileDown, FileText } from "lucide-react";
 import toast from "react-hot-toast";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function ReportsPage() {
   const [data, setData] = useState<any>(null);
@@ -16,6 +18,64 @@ export default function ReportsPage() {
       .then(setData)
       .catch(() => toast.error("Gagal mengambil laporan"));
   }, [selectedDate]);
+
+  const handleExportPDF = () => {
+    if (!data) return;
+
+    const doc = new jsPDF();
+    const dateFormatted = new Date(selectedDate).toLocaleDateString('id-ID', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(245, 158, 11); // Amber-500
+    doc.text("NGANGKRING KOBIBI", 105, 20, { align: "center" });
+    
+    doc.setFontSize(14);
+    doc.setTextColor(100);
+    doc.text("E-Statement Penjualan Harian", 105, 28, { align: "center" });
+    
+    doc.setFontSize(10);
+    doc.text(`Tanggal: ${dateFormatted}`, 105, 34, { align: "center" });
+
+    // Financial Summary Table
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text("Ringkasan Keuangan", 14, 45);
+    
+    autoTable(doc, {
+      startY: 48,
+      head: [['Keterangan', 'Nilai']],
+      body: [
+        ['Total Transaksi', `${data.summary.transactionsCount} Trx`],
+        ['Total Omzet (Kotor)', `Rp ${data.summary.totalRevenue.toLocaleString("id-ID")}`],
+        ['Total Modal (HPP)', `Rp ${data.summary.totalCapital.toLocaleString("id-ID")}`],
+        ['Total Untung Bersih', `Rp ${data.summary.totalProfit.toLocaleString("id-ID")}`],
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [245, 158, 11] },
+    });
+
+    // Product Sales Table
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
+    doc.text("Detail Penjualan Produk", 14, finalY);
+    
+    autoTable(doc, {
+      startY: finalY + 3,
+      head: [['Nama Produk', 'Terjual', 'Total Omzet']],
+      body: data.productSales.map((p: any) => [
+        p.name, 
+        p.sold, 
+        `Rp ${p.revenue.toLocaleString("id-ID")}`
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [34, 197, 94] }, // Green-500
+    });
+
+    doc.save(`Laporan_Kobibi_${selectedDate}.pdf`);
+    toast.success("PDF berhasil diunduh");
+  };
 
   const handleSendEmail = async () => {
     setIsSending(true);
@@ -71,24 +131,29 @@ export default function ReportsPage() {
                 onChange={(e) => setSelectedDate(e.target.value)} 
                 className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--color-accent)] transition-all"
               />
-              <button 
-                onClick={handleSendEmail}
-                disabled={isSending}
-                className="flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-accent)]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
-              >
-                {isSending ? (
-                  <>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleExportPDF}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text)] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-border)] transition-all border border-[var(--color-border)]"
+                  title="Unduh PDF"
+                >
+                  <FileText size={16} className="text-red-500" />
+                  <span>PDF</span>
+                </button>
+                <button 
+                  onClick={handleSendEmail}
+                  disabled={isSending}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-accent)]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
+                >
+                  {isSending ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    <span>Mengirim...</span>
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Mail size={16} />
-                    <span className="hidden sm:inline">Tutup Kasir & Kirim</span>
-                    <span className="sm:hidden">Kirim Email</span>
-                  </>
-                )}
-              </button>
+                  )}
+                  <span className="hidden lg:inline">Tutup Kasir & Kirim</span>
+                  <span className="lg:hidden">Kirim</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -214,11 +279,11 @@ export default function ReportsPage() {
             )}
           </div>
 
-          {/* Top Products */}
-          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 md:p-6">
-            <h3 className="font-bold text-lg mb-4">Produk Terlaris</h3>
-            <div className="space-y-3">
-              {(data.topProducts || []).slice(0, 8).map((p: any, i: number) => (
+          {/* Detailed Product Sales */}
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 md:p-6 overflow-hidden flex flex-col h-[400px] lg:h-auto">
+            <h3 className="font-bold text-lg mb-4 shrink-0">Penjualan Produk</h3>
+            <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
+              {(data.productSales || []).map((p: any, i: number) => (
                 <div 
                   key={i} 
                   className="flex justify-between items-center p-3 bg-[var(--color-surface-2)]/40 hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl transition-colors"
@@ -231,12 +296,17 @@ export default function ReportsPage() {
                       {p.name}
                     </span>
                   </div>
-                  <span className="text-xs text-[var(--color-accent)] font-bold bg-[var(--color-accent)]/10 px-2.5 py-1 rounded-lg shrink-0 ml-2">
-                    {p.sold}
-                  </span>
+                  <div className="flex flex-col items-end shrink-0 ml-2">
+                    <span className="text-xs text-[var(--color-accent)] font-bold bg-[var(--color-accent)]/10 px-2 py-0.5 rounded-lg mb-1">
+                      {p.sold}x
+                    </span>
+                    <span className="text-[10px] text-[var(--color-text-muted)] font-mono">
+                      Rp {p.revenue.toLocaleString("id-ID")}
+                    </span>
+                  </div>
                 </div>
               ))}
-              {(!data.topProducts || data.topProducts.length === 0) && (
+              {(!data.productSales || data.productSales.length === 0) && (
                 <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">
                   Belum ada data di tanggal ini
                 </div>

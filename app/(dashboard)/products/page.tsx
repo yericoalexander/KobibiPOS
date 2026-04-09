@@ -12,7 +12,7 @@ export default function ProductsPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", price: "", costPrice: "", stock: "", emoji: "🍔", categoryId: "", active: true });
+  const [form, setForm] = useState({ name: "", price: "", costPrice: "", stock: "", categoryId: "", active: true });
 
   const fetchData = async () => {
     try {
@@ -32,13 +32,13 @@ export default function ProductsPage() {
 
   const openNew = () => {
     setEditingId(null);
-    setForm({ name: "", price: "", costPrice: "", stock: "", emoji: "🍔", categoryId: categories.length > 0 ? categories[0].id : "", active: true });
+    setForm({ name: "", price: "", costPrice: "", stock: "", categoryId: categories.length > 0 ? categories[0].id : "", active: true });
     setIsModalOpen(true);
   };
 
   const openEdit = (p: any) => {
     setEditingId(p.id);
-    setForm({ name: p.name, price: p.price.toString(), costPrice: p.costPrice?.toString() || "0", stock: p.stock?.toString() || "0", emoji: p.emoji || "🍔", categoryId: p.categoryId || "", active: p.active });
+    setForm({ name: p.name, price: p.price.toString(), costPrice: p.costPrice?.toString() || "0", stock: p.stock?.toString() || "0", categoryId: p.categoryId || "", active: p.active });
     setIsModalOpen(true);
   };
 
@@ -112,8 +112,7 @@ export default function ProductsPage() {
                   ) : (
                     products.map(p => (
                       <tr key={p.id} className="hover:bg-[var(--color-surface-2)]/30 transition-colors">
-                        <td className="px-6 py-4 font-bold flex items-center">
-                          <span className="text-2xl mr-3">{p.emoji}</span>
+                        <td className="px-6 py-4 font-bold">
                           {p.name}
                         </td>
                         <td className="px-6 py-4 text-[var(--color-text-muted)]">{p.category?.name || '-'}</td>
@@ -153,7 +152,7 @@ export default function ProductsPage() {
               <div key={p.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
                 {/* Product Name & Emoji */}
                 <div className="flex items-start gap-3">
-                  <span className="text-4xl flex-shrink-0">{p.emoji}</span>
+
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-base text-white truncate">{p.name}</p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
@@ -215,12 +214,8 @@ export default function ProductsPage() {
             </div>
             
             <form onSubmit={handleSave} className="p-4 md:p-6 space-y-4 flex-1">
-              <div className="grid grid-cols-4 gap-3">
-                <div className="col-span-1">
-                  <label className="block text-xs md:text-sm font-semibold mb-1.5 text-[var(--color-text-muted)]">Emoji</label>
-                  <input type="text" required value={form.emoji} onChange={e => setForm({...form, emoji: e.target.value})} className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl py-2 px-3 focus:outline-none focus:border-[var(--color-accent)] text-2xl text-center" />
-                </div>
-                <div className="col-span-3">
+              <div className="space-y-4">
+                <div>
                   <label className="block text-xs md:text-sm font-semibold mb-1.5 text-[var(--color-text-muted)]">Nama Produk</label>
                   <input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl py-2 px-4 focus:outline-none focus:border-[var(--color-accent)] text-sm" />
                 </div>

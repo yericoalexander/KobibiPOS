@@ -49,11 +49,17 @@ export async function GET(req: Request) {
     const transactionsCount = dateOrders.length;
     const avgValue = transactionsCount > 0 ? totalRevenue / transactionsCount : 0;
 
-    // Top products for that date
-    const productStats = productsData.map(p => {
-      const sold = p.orderItems.filter(oi => oi.order.status === 'PAID' && oi.order.createdAt >= startOfDay && oi.order.createdAt <= endOfDay).reduce((sum, oi) => sum + oi.qty, 0);
-      return { name: p.name, sold };
-    }).filter(p => p.sold > 0).sort((a, b) => b.sold - a.sold).slice(0, 5);
+    // Product sales stats for that date
+    const productSales = productsData.map(p => {
+      const soldItems = p.orderItems.filter(oi => 
+        oi.order.status === OrderStatus.PAID && 
+        oi.order.createdAt >= startOfDay && 
+        oi.order.createdAt <= endOfDay
+      );
+      const sold = soldItems.reduce((sum, oi) => sum + oi.qty, 0);
+      const revenue = soldItems.reduce((sum, oi) => sum + (oi.price * oi.qty), 0);
+      return { name: p.name, sold, revenue };
+    }).filter(p => p.sold > 0).sort((a, b) => b.sold - a.sold);
 
     return NextResponse.json({
       summary: {
@@ -64,7 +70,8 @@ export async function GET(req: Request) {
         avgValue,
         unpaidCount
       },
-      topProducts: productStats,
+      topProducts: productSales.slice(0, 5),
+      productSales,
       chartData: allOrders.map(o => ({
         date: o.createdAt.toLocaleDateString(),
         revenue: o.total,
