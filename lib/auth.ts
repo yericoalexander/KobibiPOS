@@ -17,29 +17,50 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing credentials");
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.error("[AUTH] Missing credentials");
+            throw new Error("Missing credentials");
+          }
+
+          console.log("[AUTH] Attempting login for:", credentials.email);
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          });
+
+          console.log("[AUTH] User found:", user ? "YES" : "NO");
+
+          if (!user) {
+            console.error("[AUTH] User not found");
+            throw new Error("Invalid email or password");
+          }
+
+          const passwordMatch = await bcrypt.compare(credentials.password as string, user.password as string);
+          console.log("[AUTH] Password match:", passwordMatch);
+
+          if (!passwordMatch) {
+            console.error("[AUTH] Password mismatch");
+            throw new Error("Invalid email or password");
+          }
+
+          if (!user.active) {
+            console.error("[AUTH] User inactive");
+            throw new Error("User account is inactive");
+          }
+
+          console.log("[AUTH] Login successful for:", user.email);
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            storeId: user.storeId,
+          };
+        } catch (error) {
+          console.error("[AUTH] Error during authorization:", error);
+          throw error;
         }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
-
-        if (!user || !(await bcrypt.compare(credentials.password as string, user.password as string))) {
-          throw new Error("Invalid email or password");
-        }
-
-        if (!user.active) {
-          throw new Error("User account is inactive");
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          storeId: user.storeId,
-        };
       },
     }),
   ],
