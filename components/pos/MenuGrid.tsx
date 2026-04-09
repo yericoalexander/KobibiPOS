@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { useCartStore } from "@/store/useCartStore";
-import { Plus, Minus } from "lucide-react";
 
 const ProductCard = React.memo(({ p, qtyInCart, handleAdd, handleIncrease, handleDecrease }: any) => {
   const remainingStock = p.stock - qtyInCart;
@@ -49,9 +48,9 @@ const ProductCard = React.memo(({ p, qtyInCart, handleAdd, handleIncrease, handl
             >
               <button
                 onClick={() => handleDecrease(p.id, qtyInCart)}
-                className="w-9 h-9 flex items-center justify-center hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors"
+                className="w-9 h-9 flex items-center justify-center hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors text-lg font-medium text-[var(--color-text-muted)]"
                >
-                <Minus size={16} className="text-[var(--color-text-muted)]" />
+                &minus;
               </button>
               
               <div className="w-10 text-center font-bold text-lg">
@@ -61,9 +60,9 @@ const ProductCard = React.memo(({ p, qtyInCart, handleAdd, handleIncrease, handl
               <button
                 onClick={() => handleIncrease(p.id, qtyInCart)}
                 disabled={remainingStock <= 0}
-                className="w-9 h-9 flex items-center justify-center hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-9 h-9 flex items-center justify-center hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xl font-medium text-[var(--color-accent)]"
               >
-                <Plus size={16} className="text-[var(--color-accent)]" />
+                &#43;
               </button>
             </div>
           )}

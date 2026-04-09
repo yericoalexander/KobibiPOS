@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useCartStore } from "@/store/useCartStore";
 import { useDraftStore } from "@/store/useDraftStore";
-import { Plus, Minus, Trash2, User, Hash, AlertCircle } from "lucide-react";
+import { User, Hash, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import PaymentModal from "../modals/PaymentModal";
 
@@ -150,13 +150,13 @@ export default function OrderPanel() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-auto">
-                  <button onClick={() => removeItem(item.id)} className="text-[var(--color-danger)]/70 hover:text-[var(--color-danger)] p-1.5 rounded-lg hover:bg-[var(--color-danger)]/10 transition-colors">
-                    <Trash2 size={16} />
+                  <button onClick={() => removeItem(item.id)} className="text-[var(--color-danger)]/70 hover:text-[var(--color-danger)] p-1.5 rounded-lg hover:bg-[var(--color-danger)]/10 transition-colors text-lg font-bold">
+                    &times;
                   </button>
                   <div className="flex items-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg overflow-hidden shrink-0">
-                    <button onClick={() => updateQty(item.id, Math.max(1, item.qty - 1))} className="px-2.5 py-1.5 hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors"><Minus size={14} /></button>
+                    <button onClick={() => updateQty(item.id, Math.max(1, item.qty - 1))} className="px-3 py-1 hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] transition-colors text-lg font-medium">&minus;</button>
                     <span className="w-8 text-center text-sm font-semibold">{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, item.qty + 1)} className="px-2.5 py-1.5 hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] text-[var(--color-accent)] transition-colors"><Plus size={14} /></button>
+                    <button onClick={() => updateQty(item.id, item.qty + 1)} className="px-3 py-1 hover:bg-[var(--color-surface-2)] active:bg-[var(--color-border)] text-[var(--color-accent)] transition-colors text-lg font-medium">&#43;</button>
                   </div>
                 </div>
               </div>
