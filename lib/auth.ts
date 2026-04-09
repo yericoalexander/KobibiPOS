@@ -33,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (!user) {
             console.error("[AUTH] User not found");
-            throw new Error("Invalid email or password");
+            return null;
           }
 
           const passwordMatch = await bcrypt.compare(credentials.password as string, user.password as string);
@@ -41,12 +41,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (!passwordMatch) {
             console.error("[AUTH] Password mismatch");
-            throw new Error("Invalid email or password");
+            return null;
           }
 
           if (!user.active) {
             console.error("[AUTH] User inactive");
-            throw new Error("User account is inactive");
+            return null;
           }
 
           console.log("[AUTH] Login successful for:", user.email);
@@ -59,7 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         } catch (error) {
           console.error("[AUTH] Error during authorization:", error);
-          throw error;
+          return null;
         }
       },
     }),

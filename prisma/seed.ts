@@ -30,7 +30,7 @@ async function main() {
 
   console.log('✓ Default category created:', category.name);
 
-  // 3. Create Owner User (Hanya 1 user owner untuk login pertama kali)
+  // 3. Create Owner User
   const owner = await prisma.user.create({
     data: {
       name: 'Owner',
@@ -42,24 +42,46 @@ async function main() {
     },
   });
 
-  console.log('✓ Owner user created:', owner.email);
+  // 4. Create Admin User
+  const admin = await prisma.user.create({
+    data: {
+      name: 'Admin',
+      email: 'admin@test.com',
+      password: hashedPassword,
+      role: Role.ADMIN,
+      storeId: store.id,
+      active: true,
+    },
+  });
+
+  // 5. Create Kasir User
+  const kasir = await prisma.user.create({
+    data: {
+      name: 'Kasir',
+      email: 'kasir@test.com',
+      password: hashedPassword,
+      role: Role.KASIR,
+      storeId: store.id,
+      active: true,
+    },
+  });
+
+  console.log('✓ Users created: Owner, Admin, Kasir');
   console.log('');
   console.log('═══════════════════════════════════════════════════════');
   console.log('  DATABASE SIAP DIGUNAKAN!');
   console.log('═══════════════════════════════════════════════════════');
   console.log('');
   console.log('  Login credentials:');
-  console.log('  Email    : owner@test.com');
-  console.log('  Password : password123');
+  console.log('  Email (Owner) : owner@test.com');
+  console.log('  Email (Admin) : admin@test.com');
+  console.log('  Email (Kasir) : kasir@test.com');
+  console.log('  Password      : password123');
   console.log('');
   console.log('  PENTING:');
   console.log('  1. Login dengan credentials di atas');
   console.log('  2. Ganti password di menu Settings');
   console.log('  3. Update info toko di menu Settings');
-  console.log('  4. Tambahkan kategori di menu Categories');
-  console.log('  5. Tambahkan produk di menu Products');
-  console.log('  6. Buat user kasir/admin di menu Users');
-  console.log('');
   console.log('═══════════════════════════════════════════════════════');
 }
 
