@@ -44,7 +44,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             </>
           )}
 
-          {role === "OWNER" && (
+          {(role === "OWNER" || role === "ADMIN") && (
             <>
               <div className="hidden lg:block pt-6 pb-2 px-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
                 Laporan & Sistem
