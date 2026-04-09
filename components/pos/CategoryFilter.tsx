@@ -8,7 +8,9 @@ interface CategoryFilterProps {
   onChange: (id: string | null) => void;
 }
 
-export default function CategoryFilter({ categories, active, onChange }: CategoryFilterProps) {
+import React from 'react';
+
+const CategoryFilter = React.memo(({ categories, active, onChange }: CategoryFilterProps) => {
   return (
     <div className="flex gap-2 w-full overflow-x-auto pb-2 custom-scrollbar shrink-0">
       <button
@@ -38,4 +40,7 @@ export default function CategoryFilter({ categories, active, onChange }: Categor
       ))}
     </div>
   );
-}
+});
+
+CategoryFilter.displayName = 'CategoryFilter';
+export default CategoryFilter;
