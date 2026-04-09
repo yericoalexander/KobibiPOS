@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       <aside className="hidden md:flex w-64 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-col transition-all duration-300 z-20 shadow-xl shrink-0">
         <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-[var(--color-border)]">
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg shrink-0 p-1">
-            <img src="/kobibi.jpeg" alt="NGANGKRING KOBIBI" className="w-full h-full object-cover rounded-full" />
+            <img src="/kobibi.jpg" alt="NGANGKRING KOBIBI" className="w-full h-full object-cover rounded-full" />
           </div>
           <div className="hidden lg:block ml-3">
             <p className="text-base font-bold leading-tight bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">

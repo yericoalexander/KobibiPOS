@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import MenuGrid from "./MenuGrid";
@@ -9,6 +9,46 @@ import DraftBar from "./DraftBar";
 import CategoryFilter from "./CategoryFilter";
 import { ShoppingBag, X, Settings, LogOut, User, Menu as MenuIcon } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+
+function MobileCartFloatingButton({ onClick }: { onClick: () => void }) {
+  const { items } = useCartStore();
+  const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
+  
+  return (
+    <button 
+      onClick={onClick}
+      className="bg-[var(--color-accent)] text-white p-4 rounded-full shadow-2xl flex items-center justify-center relative focus:outline-none hover:scale-105 active:scale-95 transition-transform"
+    >
+      <ShoppingBag size={24} />
+      {totalItems > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-[var(--color-bg)] shadow-md">
+          {totalItems}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function MobileCartHeader({ onClose }: { onClose: () => void }) {
+  const { items } = useCartStore();
+  const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+
+  return (
+    <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] shrink-0">
+      <div>
+        <h2 className="text-lg font-bold">Keranjang Order</h2>
+        <p className="text-xs text-[var(--color-text-muted)]">{totalItems} items • Rp {subtotal.toLocaleString("id-ID")}</p>
+      </div>
+      <button 
+        onClick={onClose} 
+        className="p-2 bg-[var(--color-surface-2)] hover:bg-red-500/10 hover:text-red-500 rounded-full text-[var(--color-text-muted)] transition-colors"
+      >
+        <X size={20} />
+      </button>
+    </div>
+  );
+}
 
 export default function PosContainer({ 
   products, 
@@ -20,17 +60,15 @@ export default function PosContainer({
   user?: { role: string };
 }) {
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
 
-  const { items } = useCartStore();
-  const totalItems = items.reduce((sum, item) => sum + item.qty, 0);
-  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-
+  // ONLY recalculate when deferredSearch or activeCategory changes
   const filteredProducts = products.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = p.name.toLowerCase().includes(deferredSearch.toLowerCase());
     const matchCategory = activeCategory ? p.categoryId === activeCategory : true;
     return matchSearch && matchCategory;
   });
@@ -140,17 +178,7 @@ export default function PosContainer({
 
       {/* MOBILE CART FLOATING BUTTON */}
       <div className="lg:hidden fixed bottom-24 right-4 z-40">
-        <button 
-          onClick={() => setIsMobileCartOpen(true)}
-          className="bg-[var(--color-accent)] text-white p-4 rounded-full shadow-2xl flex items-center justify-center relative focus:outline-none hover:scale-105 active:scale-95 transition-transform"
-        >
-          <ShoppingBag size={24} />
-          {totalItems > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-[var(--color-bg)] shadow-md">
-              {totalItems}
-            </span>
-          )}
-        </button>
+        <MobileCartFloatingButton onClick={() => setIsMobileCartOpen(true)} />
       </div>
 
       {/* MOBILE CART SLIDE-UP OVERLAY */}
@@ -161,18 +189,7 @@ export default function PosContainer({
             onClick={() => setIsMobileCartOpen(false)} 
           />
           <div className="bg-[var(--color-bg)] w-full h-[88vh] rounded-t-3xl shadow-2xl relative flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[76px] md:pb-6">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-surface)] shrink-0">
-              <div>
-                <h2 className="text-lg font-bold">Keranjang Order</h2>
-                <p className="text-xs text-[var(--color-text-muted)]">{totalItems} items • Rp {subtotal.toLocaleString("id-ID")}</p>
-              </div>
-              <button 
-                onClick={() => setIsMobileCartOpen(false)} 
-                className="p-2 bg-[var(--color-surface-2)] hover:bg-red-500/10 hover:text-red-500 rounded-full text-[var(--color-text-muted)] transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
+            <MobileCartHeader onClose={() => setIsMobileCartOpen(false)} />
             <div className="flex-1 overflow-hidden p-2 relative">
               <OrderPanel />
             </div>

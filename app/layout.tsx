@@ -21,8 +21,8 @@ const dmMono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FibrPOS Clone",
-  description: "Advanced Point of Sale System",
+  title: "NGANGKRING KOBIBI",
+  description: "Aplikasi POS untuk Ngangkring Kobibi",
 };
 
 export default function RootLayout({
