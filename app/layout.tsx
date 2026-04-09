@@ -23,6 +23,13 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "NGANGKRING KOBIBI",
   description: "Aplikasi POS untuk Ngangkring Kobibi",
+  manifest: "/manifest.json",
+  themeColor: "#f59e0b",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
 };
 
 export default function RootLayout({
@@ -39,6 +46,17 @@ export default function RootLayout({
           {children}
           <Toaster position="top-right" />
         </Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
