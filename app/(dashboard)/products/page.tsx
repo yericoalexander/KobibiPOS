@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit3, X } from "lucide-react";
+import { Plus, Trash2, Edit3, X, Search } from "lucide-react";
+
 import toast from "react-hot-toast";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -75,18 +78,48 @@ export default function ProductsPage() {
     }
   };
 
+  const filteredProducts = products.filter(p => {
+    const searchLower = search.toLowerCase();
+    return p.name.toLowerCase().includes(searchLower) || 
+           (p.category?.name || "").toLowerCase().includes(searchLower);
+  });
+
   return (
+
     <div className="p-4 md:p-6 lg:p-10 h-full overflow-y-auto custom-scrollbar">
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold">Produk Menu</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-text)]">Produk Menu</h1>
             <p className="text-[var(--color-text-muted)] text-sm md:text-base mt-1">Manajemen katalog menu POS Anda</p>
           </div>
-          <button onClick={openNew} className="hidden sm:flex w-auto bg-[var(--color-accent)] hover:bg-amber-600 text-white font-bold py-3 px-4 md:px-6 rounded-xl items-center justify-center shadow-lg shadow-amber-500/20 transition-all whitespace-nowrap">
+          <button onClick={openNew} className="hidden sm:flex bg-[var(--color-accent)] hover:opacity-90 text-white font-bold py-2.5 px-6 rounded-xl items-center justify-center shadow-md shadow-blue-500/20 transition-all whitespace-nowrap">
             <Plus size={18} className="mr-2" /> Tambah Produk
           </button>
         </div>
+
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={18} />
+          <input 
+            type="text" 
+            placeholder="Cari nama produk atau kategori..." 
+            className="w-full bg-white border border-[var(--color-border)] focus:border-[var(--color-accent)] rounded-xl py-3 pl-12 pr-10 focus:outline-none transition-all text-sm shadow-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button 
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1"
+              title="Hapus pencarian"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+
+
 
         {/* DESKTOP TABLE VIEW */}
         <div className="hidden md:block bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-lg">
@@ -107,10 +140,11 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
-                  {products.length === 0 ? (
-                    <tr><td colSpan={7} className="px-6 py-8 text-center text-[var(--color-text-muted)] italic">Katalog masih kosong</td></tr>
+                  {filteredProducts.length === 0 ? (
+                    <tr><td colSpan={7} className="px-6 py-8 text-center text-[var(--color-text-muted)] italic">{search ? 'Produk tidak ditemukan' : 'Katalog masih kosong'}</td></tr>
                   ) : (
-                    products.map(p => (
+                    filteredProducts.map(p => (
+
                       <tr key={p.id} className="hover:bg-[var(--color-surface-2)]/30 transition-colors">
                         <td className="px-6 py-4 font-bold">
                           {p.name}
@@ -145,16 +179,17 @@ export default function ProductsPage() {
         <div className="md:hidden space-y-3">
           {loading ? (
             <div className="text-center py-8 text-[var(--color-text-muted)]">Memuat katalog...</div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-8 text-[var(--color-text-muted)]">Katalog masih kosong</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-[var(--color-text-muted)]">{search ? 'Produk tidak ditemukan' : 'Katalog masih kosong'}</div>
           ) : (
-            products.map(p => (
+            filteredProducts.map(p => (
+
               <div key={p.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
                 {/* Product Name & Emoji */}
                 <div className="flex items-start gap-3">
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-base text-white truncate">{p.name}</p>
+                    <p className="font-bold text-base text-[var(--color-text)] truncate">{p.name}</p>
                     <p className="text-xs text-[var(--color-text-muted)] mt-1">
                       {p.category?.name || '-'}
                     </p>
@@ -198,7 +233,7 @@ export default function ProductsPage() {
       {/* MOBILE FLOATING ACTION BUTTON */}
       <button 
         onClick={openNew}
-        className="sm:hidden fixed bottom-24 right-4 z-40 w-16 h-16 bg-[var(--color-accent)] hover:bg-amber-600 text-white rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 focus:outline-none"
+        className="sm:hidden fixed bottom-24 right-4 z-40 w-16 h-16 bg-[var(--color-accent)] hover:opacity-90 text-white rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-95 focus:outline-none"
       >
         <Plus size={28} />
       </button>
@@ -250,7 +285,7 @@ export default function ProductsPage() {
                  <label className="flex items-center cursor-pointer">
                    <div className="relative">
                      <input type="checkbox" className="sr-only" checked={form.active} onChange={e => setForm({...form, active: e.target.checked})} />
-                     <div className={`block w-14 h-8 rounded-full transition-colors ${form.active ? 'bg-[var(--color-accent)]' : 'bg-gray-600'}`}></div>
+                     <div className={`block w-14 h-8 rounded-full transition-colors ${form.active ? 'bg-[var(--color-accent)]' : 'bg-gray-300'}`}></div>
                      <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${form.active ? 'transform translate-x-6' : ''}`}></div>
                    </div>
                    <div className="ml-3 font-semibold text-xs md:text-sm">Produk Aktif (Bisa dibeli)</div>
@@ -258,7 +293,7 @@ export default function ProductsPage() {
               </div>
 
               <div className="pt-4 sticky bottom-0 bg-[var(--color-surface)]">
-                <button type="submit" className="w-full bg-[var(--color-accent)] hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-amber-500/20 transition-all text-sm md:text-base">
+                <button type="submit" className="w-full bg-[var(--color-accent)] hover:opacity-90 text-white font-bold py-3 rounded-xl shadow-md shadow-blue-500/20 transition-all text-sm md:text-base">
                   Simpan Produk
                 </button>
               </div>

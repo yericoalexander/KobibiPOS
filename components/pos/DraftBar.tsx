@@ -88,12 +88,12 @@ export default function DraftBar() {
               className={cn(
                 "group shrink-0 flex items-center px-4 py-2 rounded-xl border cursor-pointer transition-all min-w-[200px] shadow-sm",
                 isActive 
-                  ? "bg-amber-500/10 border-[var(--color-accent)]" 
-                  : "bg-[var(--color-surface-2)] border-[var(--color-border)] hover:border-white/20"
+                  ? "bg-[var(--color-accent)]/10 border-[var(--color-accent)]" 
+                  : "bg-white border-[var(--color-border)] hover:border-[var(--color-accent)]/40"
               )}
             >
               <div className="flex-1 min-w-0 mr-3">
-                <p className={cn("text-xs font-bold truncate", isActive ? "text-[var(--color-accent)]" : "text-white")}>
+                <p className={cn("text-xs font-bold truncate", isActive ? "text-[var(--color-accent)]" : "text-[var(--color-text)]")}>
                   {d.customerName || d.orderNumber}
                 </p>
                 <p className="text-[10px] text-[var(--color-text-muted)] truncate mt-0.5">

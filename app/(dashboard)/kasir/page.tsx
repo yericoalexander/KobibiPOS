@@ -1,30 +1,34 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import PosContainer from "@/components/pos/PosContainer";
-import { redirect } from "next/navigation";
 
-export default async function KasirPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+export default function KasirPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
-  console.log('=== SESSION DEBUG ===');
-  console.log('User ID:', session.user.id);
-  console.log('User Email:', session.user.email);
-  console.log('User Role:', (session.user as any).role);
-  console.log('Store ID:', (session.user as any).storeId);
-  console.log('====================');
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+    if (status === "authenticated") {
+      // Fetch data in background - page renders instantly
+      Promise.all([
+        fetch("/api/products?active=true").then(r => r.json()),
+        fetch("/api/categories").then(r => r.json()),
+      ]).then(([prods, cats]) => {
+        setProducts(prods);
+        setCategories(cats);
+      });
+    }
+  }, [status]);
 
-  const [products, categories] = await Promise.all([
-    prisma.product.findMany({
-      where: { storeId: session.user.storeId, active: true },
-      include: { category: true },
-      orderBy: { name: 'asc' },
-    }),
-    prisma.category.findMany({
-      where: { storeId: session.user.storeId },
-      orderBy: { name: 'asc' }
-    })
-  ]);
+  if (status === "loading") return null;
 
   return (
     <div className="h-full flex flex-col pt-4 overflow-hidden">
@@ -32,7 +36,7 @@ export default async function KasirPage() {
         products={products} 
         categories={categories}
         user={{
-          role: session.user.role || 'KASIR'
+          role: (session?.user as any)?.role || 'KASIR'
         }}
       />
     </div>

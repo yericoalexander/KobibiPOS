@@ -16,10 +16,10 @@ const CategoryFilter = React.memo(({ categories, active, onChange }: CategoryFil
       <button
         onClick={() => onChange(null)}
         className={cn(
-          "px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300",
+          "px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300",
           active === null
-            ? "bg-[var(--color-accent)] text-white shadow-lg shadow-amber-500/20"
-            : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-accent)]/50"
+            ? "bg-[var(--color-accent)] text-white shadow-md shadow-blue-500/20"
+            : "bg-white border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]/50 shadow-sm"
         )}
       >
         Semua
@@ -29,10 +29,10 @@ const CategoryFilter = React.memo(({ categories, active, onChange }: CategoryFil
           key={c.id}
           onClick={() => onChange(c.id)}
           className={cn(
-            "px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-300",
+            "px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300",
             active === c.id
-              ? "bg-[var(--color-accent)] text-white shadow-lg shadow-amber-500/20"
-              : "bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-white hover:border-[var(--color-accent)]/50"
+              ? "bg-[var(--color-accent)] text-white shadow-md shadow-blue-500/20"
+              : "bg-white border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)]/30 shadow-sm"
           )}
         >
           {c.name}

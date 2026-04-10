@@ -32,9 +32,9 @@ export default function PaymentModal({ isOpen, onClose, subtotal, total, onConfi
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-md shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200">
         
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-2)] shrink-0">
-          <h2 className="text-lg sm:text-xl font-bold">Pembayaran</h2>
-          <button onClick={onClose} className="p-2 bg-[var(--color-surface)] hover:bg-[var(--color-danger)]/10 hover:text-[var(--color-danger)] rounded-full transition-colors">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] shrink-0">
+          <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text)]">Pembayaran</h2>
+          <button onClick={onClose} className="p-2 bg-white hover:bg-[var(--color-danger)]/10 hover:text-[var(--color-danger)] rounded-full transition-colors border border-[var(--color-border)]">
             <X size={18} />
           </button>
         </div>
@@ -59,8 +59,8 @@ export default function PaymentModal({ isOpen, onClose, subtotal, total, onConfi
                   className={cn(
                     "flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all",
                     method === m.id 
-                      ? "border-[var(--color-accent)] bg-amber-500/10 text-[var(--color-accent)]" 
-                      : "border-[var(--color-border)] bg-[var(--color-surface-2)] text-[var(--color-text-muted)] hover:border-white/20"
+                      ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]" 
+                      : "border-[var(--color-border)] bg-white text-[var(--color-text-muted)] hover:border-[var(--color-accent)]/30"
                   )}
                 >
                   {m.icon}
@@ -83,7 +83,7 @@ export default function PaymentModal({ isOpen, onClose, subtotal, total, onConfi
                         const newTotal = (Number(amountPaid.replace(/\D/g, "")) + val);
                         setAmountPaid(newTotal.toLocaleString("id-ID"));
                     }}
-                    className="px-2 py-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full font-semibold hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+                    className="px-2 py-1 bg-white border border-[var(--color-border)] rounded-full font-semibold text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
                   >
                     +{val / 1000}k
                   </button>
@@ -91,7 +91,7 @@ export default function PaymentModal({ isOpen, onClose, subtotal, total, onConfi
                 <button
                     type="button"
                     onClick={() => setAmountPaid(total.toLocaleString("id-ID"))}
-                    className="px-2 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full font-semibold hover:bg-amber-500 hover:text-white transition-colors"
+                    className="px-2 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] border border-[var(--color-accent)]/20 rounded-full font-semibold hover:bg-[var(--color-accent)] hover:text-white transition-colors"
                 >
                     Pas
                 </button>
@@ -120,13 +120,13 @@ export default function PaymentModal({ isOpen, onClose, subtotal, total, onConfi
           )}
         </div>
 
-        <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-surface)] shrink-0">
+        <div className="p-4 border-t border-[var(--color-border)] bg-white shrink-0">
           <button
             onClick={handleConfirm}
             disabled={!isSufficient}
-            className="w-full py-3 rounded-xl font-bold text-white bg-[var(--color-accent)] hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-amber-500/20"
+            className="w-full py-3.5 rounded-xl font-bold text-white bg-[var(--color-accent)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md shadow-blue-500/20"
           >
-            Konfirmasi
+            Konfirmasi Pembayaran
           </button>
         </div>
       </div>

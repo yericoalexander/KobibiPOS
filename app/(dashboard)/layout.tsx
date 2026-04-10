@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import Link from "next/link";
-import { LogOut, Settings, LayoutDashboard, ShoppingCart, Users, Package, Tags, Menu } from "lucide-react";
+import { LogOut, Settings, LayoutDashboard, ShoppingCart, Users, Package, Tags, BarChart2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -15,76 +15,75 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const role = session.user.role;
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-[var(--color-bg)] overflow-hidden text-[var(--color-text)] selection:bg-[var(--color-accent)] selection:text-white">
+    <div className="flex flex-col md:flex-row h-screen bg-[var(--color-bg)] overflow-hidden text-[var(--color-text)]">
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex w-64 bg-[var(--color-surface)] border-r border-[var(--color-border)] flex-col transition-all duration-300 z-20 shadow-xl shrink-0">
-        <div className="h-20 flex items-center justify-center lg:justify-start lg:px-8 border-b border-[var(--color-border)]">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg shrink-0 p-1">
-            <img src="/kobibi.jpg" alt="NGANGKRING KOBIBI" className="w-full h-full object-cover rounded-full" />
+      <aside className="hidden md:flex w-64 flex-col shrink-0 z-20 shadow-xl"
+             style={{ background: 'var(--color-sidebar)' }}>
+        {/* Logo */}
+        <div className="h-20 flex items-center px-6 border-b border-white/10">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-md shrink-0">
+            <img src="/kobibi.jpg" alt="Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="hidden lg:block ml-3">
-            <p className="text-base font-bold leading-tight bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent">
-              NGANGKRING
-            </p>
-            <p className="text-xs font-semibold text-[var(--color-text-muted)]">KOBIBI</p>
+          <div className="ml-3">
+            <p className="text-sm font-bold text-white leading-tight">NGANGKRING</p>
+            <p className="text-xs font-medium text-white/60">KOBIBI</p>
           </div>
         </div>
 
-        <nav className="flex-1 py-6 px-3 space-y-2 overflow-y-auto">
-          <NavItem href="/kasir" icon={<ShoppingCart size={22} />} label="Kasir (POS)" />
-          <NavItem href="/orders" icon={<LayoutDashboard size={22} />} label="Riwayat Order" />
+        {/* Navigation */}
+        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+          <NavItem href="/kasir" icon={<ShoppingCart size={20} />} label="Kasir (POS)" />
+          <NavItem href="/orders" icon={<LayoutDashboard size={20} />} label="Riwayat Order" />
           
           {(role === "OWNER" || role === "ADMIN") && (
             <>
-              <div className="hidden lg:block pt-6 pb-2 px-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+              <div className="pt-5 pb-1 px-3 text-[10px] font-bold text-white/40 uppercase tracking-widest">
                 Manajemen
               </div>
-              <NavItem href="/products" icon={<Package size={22} />} label="Produk Menu" />
-              <NavItem href="/categories" icon={<Tags size={22} />} label="Kategori" />
+              <NavItem href="/products" icon={<Package size={20} />} label="Produk Menu" />
+              <NavItem href="/categories" icon={<Tags size={20} />} label="Kategori" />
             </>
           )}
 
           {(role === "OWNER" || role === "ADMIN") && (
             <>
-              <div className="hidden lg:block pt-6 pb-2 px-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
+              <div className="pt-5 pb-1 px-3 text-[10px] font-bold text-white/40 uppercase tracking-widest">
                 Laporan & Sistem
               </div>
-              <NavItem href="/reports" icon={<LayoutDashboard size={22} />} label="Laporan" />
-              <NavItem href="/users" icon={<Users size={22} />} label="Kasir & Admin" />
+              <NavItem href="/reports" icon={<BarChart2 size={20} />} label="Laporan" />
+              <NavItem href="/users" icon={<Users size={20} />} label="Kasir & Admin" />
             </>
           )}
 
           {(role === "OWNER" || role === "ADMIN") && (
-            <NavItem href="/settings" icon={<Settings size={22} />} label="Pengaturan" />
+            <NavItem href="/settings" icon={<Settings size={20} />} label="Pengaturan" />
           )}
         </nav>
 
-        <div className="p-4 border-t border-[var(--color-border)]">
-          <div className="hidden lg:block px-3 py-2 mb-3 bg-[var(--color-surface-2)] rounded-xl border border-[var(--color-border)]">
-            <p className="text-sm font-semibold truncate">{session.user.name}</p>
-            <p className="text-xs text-[var(--color-text-muted)] truncate">{role}</p>
+        {/* User Info & Signout */}
+        <div className="p-4 border-t border-white/10">
+          <div className="px-3 py-2.5 mb-3 bg-white/10 rounded-xl">
+            <p className="text-sm font-semibold text-white truncate">{session.user.name}</p>
+            <p className="text-xs text-white/60 truncate">{role}</p>
           </div>
           <SignOutButton />
         </div>
       </aside>
 
       {/* MOBILE BOTTOM NAV */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-[var(--color-surface)] border-t border-[var(--color-border)] flex items-center justify-around z-50 px-2 pb-safe shadow-[0_-10px_20px_rgba(0,0,0,0.2)]">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-[var(--color-border)] flex items-center justify-around z-50 px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
         <MobileNavItem href="/kasir" icon={<ShoppingCart size={20} />} label="Kasir" />
         <MobileNavItem href="/orders" icon={<LayoutDashboard size={20} />} label="Riwayat" />
         {(role === "OWNER" || role === "ADMIN") && (
           <MobileNavItem href="/products" icon={<Package size={20} />} label="Produk" />
         )}
         {role === "OWNER" && (
-          <MobileNavItem href="/reports" icon={<LayoutDashboard size={20} />} label="Laporan" />
+          <MobileNavItem href="/reports" icon={<BarChart2 size={20} />} label="Laporan" />
         )}
       </nav>
 
       {/* MAIN CONTENT */}
       <main className="flex-1 relative isolate overflow-y-auto w-full h-full pb-16 md:pb-0">
-        {/* Subtle background glow effect */}
-        <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-[var(--color-accent)]/5 to-transparent -z-10 blur-3xl pointer-events-none" />
-        
         {children}
       </main>
     </div>

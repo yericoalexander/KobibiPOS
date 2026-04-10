@@ -11,17 +11,17 @@ export function NavItem({ href, icon, label }: { href: string; icon: ReactNode; 
   return (
     <Link
       href={href}
-      className={`flex items-center justify-center lg:justify-start px-3 py-3 lg:px-4 rounded-xl hover:shadow-sm border transition-all group relative ${
+      className={`flex items-center px-3 py-2.5 rounded-xl transition-all group ${
         isActive
-          ? "bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-[var(--color-accent)]/20 font-semibold"
-          : "text-[var(--color-text-muted)] hover:text-white hover:bg-[var(--color-surface-2)] border-transparent hover:border-[var(--color-border)] font-medium"
+          ? "bg-white/20 text-white font-semibold shadow-sm"
+          : "text-white/70 hover:text-white hover:bg-white/10 font-medium"
       }`}
       title={label}
     >
-      <span className={`${isActive ? "text-[var(--color-accent)]" : "group-hover:text-[var(--color-accent)]"} transition-colors`}>
+      <span className={`shrink-0 ${isActive ? "text-white" : "group-hover:text-white"} transition-colors`}>
         {icon}
       </span>
-      <span className="hidden lg:block ml-4">{label}</span>
+      <span className="ml-3 text-sm">{label}</span>
     </Link>
   );
 }
@@ -37,7 +37,7 @@ export function MobileNavItem({ href, icon, label }: { href: string; icon: React
         isActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
       }`}
     >
-      <span className={isActive ? "bg-[var(--color-accent)]/20 p-1.5 rounded-xl shadow-inner" : "p-1.5"}>
+      <span className={isActive ? "bg-[var(--color-accent-light)] p-1.5 rounded-xl" : "p-1.5"}>
         {icon}
       </span>
       <span className={`text-[10px] ${isActive ? "font-bold" : "font-medium"}`}>{label}</span>

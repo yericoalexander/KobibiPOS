@@ -10,14 +10,26 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get('status') as OrderStatus | null;
+    const dateStr = searchParams.get('date');
+
+    const where: any = { storeId: session.user.storeId };
+    if (status) where.status = status;
+    
+    if (dateStr) {
+      const date = new Date(dateStr);
+      const start = new Date(date.setHours(0, 0, 0, 0));
+      const end = new Date(date.setHours(23, 59, 59, 999));
+      where.createdAt = {
+        gte: start,
+        lte: end
+      };
+    }
 
     const orders = await prisma.order.findMany({
-      where: { 
-        storeId: session.user.storeId,
-        ...(status ? { status } : {}),
-      },
+      where,
       include: {
         cashier: { select: { name: true } },
+        items: true // added items for detailed view if needed
       },
       orderBy: { createdAt: 'desc' }
     });

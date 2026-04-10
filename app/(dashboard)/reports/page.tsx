@@ -29,7 +29,7 @@ export default function ReportsPage() {
 
     // Header
     doc.setFontSize(22);
-    doc.setTextColor(245, 158, 11); // Amber-500
+    doc.setTextColor(37, 99, 235); // Blue-600
     doc.text("NGANGKRING KOBIBI", 105, 20, { align: "center" });
     
     doc.setFontSize(14);
@@ -54,7 +54,7 @@ export default function ReportsPage() {
         ['Total Untung Bersih', `Rp ${data.summary.totalProfit.toLocaleString("id-ID")}`],
       ],
       theme: 'striped',
-      headStyles: { fillColor: [245, 158, 11] },
+      headStyles: { fillColor: [37, 99, 235] }, // Blue-600
     });
 
     // Product Sales Table
@@ -143,7 +143,7 @@ export default function ReportsPage() {
                 <button 
                   onClick={handleSendEmail}
                   disabled={isSending}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-accent)]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-500/20"
                 >
                   {isSending ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
@@ -213,17 +213,17 @@ export default function ReportsPage() {
               <div className="h-64 md:h-80 w-full -ml-4 md:-ml-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#2e2e36" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                     <XAxis 
                       dataKey="date" 
-                      stroke="#71717a" 
+                      stroke="#94a3b8" 
                       fontSize={10} 
                       tickLine={false} 
                       axisLine={false}
                       interval="preserveStartEnd"
                     />
                     <YAxis 
-                      stroke="#71717a" 
+                      stroke="#94a3b8" 
                       fontSize={10} 
                       tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} 
                       tickLine={false} 
@@ -232,14 +232,15 @@ export default function ReportsPage() {
                     />
                     <Tooltip 
                       contentStyle={{ 
-                        backgroundColor: '#1a1a1f', 
-                        borderColor: '#2e2e36', 
+                        backgroundColor: '#ffffff', 
+                        borderColor: '#e2e8f0', 
                         borderRadius: '12px',
                         fontSize: '11px',
-                        padding: '8px 12px'
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                       }}
-                      labelStyle={{ color: '#a1a1aa', marginBottom: '4px' }}
-                      itemStyle={{ color: '#f59e0b', fontWeight: 'bold' }}
+                      labelStyle={{ color: '#64748b', marginBottom: '4px' }}
+                      itemStyle={{ color: '#2563eb', fontWeight: 'bold' }}
                       formatter={(value: any, name: any) => [
                         `Rp ${Number(value).toLocaleString("id-ID")}`, 
                         name === 'revenue' ? "Omzet" : "Untung"
@@ -249,9 +250,9 @@ export default function ReportsPage() {
                       type="monotone" 
                       name="revenue" 
                       dataKey="revenue" 
-                      stroke="#f59e0b" 
+                      stroke="#2563eb" 
                       strokeWidth={3} 
-                      dot={{ fill: '#f59e0b', r: 4, strokeWidth: 2, stroke: '#1a1a1f' }} 
+                      dot={{ fill: '#2563eb', r: 4, strokeWidth: 2, stroke: '#ffffff' }} 
                       activeDot={{ r: 6, strokeWidth: 2 }} 
                     />
                     <Line 
@@ -260,7 +261,7 @@ export default function ReportsPage() {
                       dataKey="profit" 
                       stroke="#22c55e" 
                       strokeWidth={3} 
-                      dot={{ fill: '#22c55e', r: 4, strokeWidth: 2, stroke: '#1a1a1f' }} 
+                      dot={{ fill: '#22c55e', r: 4, strokeWidth: 2, stroke: '#ffffff' }} 
                       activeDot={{ r: 6, strokeWidth: 2 }}
                     />
                   </LineChart>
@@ -332,37 +333,37 @@ export default function ReportsPage() {
           {/* Mobile View */}
           <div className="block md:hidden divide-y divide-[var(--color-border)]">
             {data.transactions?.length === 0 ? (
-              <div className="p-8 text-center text-[var(--color-text-muted)] text-sm">
+              <div className="p-8 text-center text-[var(--color-text-muted)] text-sm italic">
                 Tidak ada transaksi di tanggal ini
               </div>
             ) : (
               data.transactions?.map((t: any) => (
-                <div key={t.id} className="p-4 space-y-3">
+                <div key={t.id} className="p-4 space-y-3 bg-white">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <span className="bg-[var(--color-surface-2)] px-2 py-1 rounded-md font-mono text-xs border border-[var(--color-border)] inline-block">
+                      <span className="bg-[var(--color-bg)] text-[var(--color-text)] px-2 py-1 rounded-md font-mono text-[10px] border border-[var(--color-border)] inline-block font-bold">
                         {t.id}
                       </span>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-1">{t.date}</p>
-                      <p className="font-medium text-sm mt-1">{t.customer}</p>
+                      <p className="text-[10px] text-[var(--color-text-muted)] mt-1 font-medium">{t.date}</p>
+                      <p className="font-bold text-sm mt-1 text-[var(--color-text)]">{t.customer}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs">
-                    <div className="bg-[var(--color-surface-2)]/40 p-2 rounded-lg">
-                      <p className="text-[var(--color-text-muted)] mb-1">Omzet</p>
-                      <p className="font-mono font-semibold text-[var(--color-accent)]">
+                  <div className="grid grid-cols-3 gap-2 text-[10px]">
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                      <p className="text-[var(--color-text-muted)] mb-1 uppercase tracking-wider font-bold">Omzet</p>
+                      <p className="font-mono font-bold text-[var(--color-accent)]">
                         Rp {t.total?.toLocaleString("id-ID") || 0}
                       </p>
                     </div>
-                    <div className="bg-[var(--color-surface-2)]/40 p-2 rounded-lg">
-                      <p className="text-[var(--color-text-muted)] mb-1">Modal</p>
-                      <p className="font-mono font-medium text-blue-400">
+                    <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                      <p className="text-[var(--color-text-muted)] mb-1 uppercase tracking-wider font-bold">Modal</p>
+                      <p className="font-mono font-bold text-blue-500">
                         Rp {t.capital?.toLocaleString("id-ID") || 0}
                       </p>
                     </div>
-                    <div className="bg-green-500/10 p-2 rounded-lg border border-green-500/20">
-                      <p className="text-[var(--color-text-muted)] mb-1">Untung</p>
-                      <p className="font-mono font-bold text-green-500">
+                    <div className="bg-green-50 p-2 rounded-lg border border-green-100">
+                      <p className="text-[var(--color-text-muted)] mb-1 uppercase tracking-wider font-bold">Untung</p>
+                      <p className="font-mono font-bold text-green-600">
                         Rp {t.profit?.toLocaleString("id-ID") || 0}
                       </p>
                     </div>
@@ -375,45 +376,45 @@ export default function ReportsPage() {
           {/* Desktop View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#1a1a1f] text-[var(--color-text-muted)] text-xs uppercase">
+              <thead className="bg-[var(--color-surface-2)] text-[var(--color-text-muted)] text-[10px] uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">No. Transaksi</th>
-                  <th className="px-6 py-4 font-semibold">Waktu</th>
-                  <th className="px-6 py-4 font-semibold">Pelanggan</th>
-                  <th className="px-6 py-4 font-semibold text-right">Omzet</th>
-                  <th className="px-6 py-4 font-semibold text-right">Modal</th>
-                  <th className="px-6 py-4 font-semibold text-right">Untung</th>
+                  <th className="px-6 py-4 font-bold">No. Transaksi</th>
+                  <th className="px-6 py-4 font-bold">Waktu</th>
+                  <th className="px-6 py-4 font-bold">Pelanggan</th>
+                  <th className="px-6 py-4 font-bold text-right">Omzet</th>
+                  <th className="px-6 py-4 font-bold text-right">Modal</th>
+                  <th className="px-6 py-4 font-bold text-right">Untung</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border)]/50">
+              <tbody className="divide-y divide-[var(--color-border)]">
                 {data.transactions?.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-[var(--color-text-muted)]">
+                    <td colSpan={6} className="px-6 py-10 text-center text-[var(--color-text-muted)] italic">
                       Tidak ada transaksi di tanggal ini
                     </td>
                   </tr>
                 ) : (
                   data.transactions?.map((t: any) => (
-                    <tr key={t.id} className="hover:bg-[var(--color-surface-2)]/20 transition-colors">
+                    <tr key={t.id} className="hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-6 py-4">
-                        <span className="bg-[var(--color-surface-2)] px-2.5 py-1 rounded-md font-mono text-xs border border-[var(--color-border)]">
+                        <span className="bg-white px-2.5 py-1 rounded-md font-mono text-xs border border-[var(--color-border)] font-bold text-[var(--color-text)]">
                           {t.id}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-[var(--color-text-muted)] text-xs">{t.date}</td>
-                      <td className="px-6 py-4 font-medium">{t.customer}</td>
+                      <td className="px-6 py-4 text-[var(--color-text-muted)] text-[11px] font-medium">{t.date}</td>
+                      <td className="px-6 py-4 font-semibold text-[var(--color-text)]">{t.customer}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className="font-mono text-[var(--color-accent)] font-semibold">
+                        <span className="font-mono text-[var(--color-accent)] font-bold">
                           Rp {t.total?.toLocaleString("id-ID") || 0}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className="font-mono text-blue-400 font-medium">
+                        <span className="font-mono text-blue-600 font-semibold">
                           Rp {t.capital?.toLocaleString("id-ID") || 0}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className="inline-flex items-center gap-2 text-green-500 bg-green-500/10 px-2.5 py-1 rounded-lg border border-green-500/20 font-mono font-bold">
+                        <span className="inline-flex items-center gap-2 text-green-600 bg-green-50 px-2.5 py-1 rounded-lg border border-green-200 font-mono font-bold">
                           Rp {t.profit?.toLocaleString("id-ID") || 0}
                         </span>
                       </td>

@@ -7,8 +7,14 @@ export async function GET(req: Request) {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+    const { searchParams } = new URL(req.url);
+    const onlyActive = searchParams.get('active') === 'true';
+
     const products = await prisma.product.findMany({
-      where: { storeId: session.user.storeId },
+      where: { 
+        storeId: session.user.storeId,
+        ...(onlyActive ? { active: true } : {})
+      },
       include: { category: true },
       orderBy: { name: 'asc' }
     });

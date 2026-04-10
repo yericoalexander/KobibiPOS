@@ -110,23 +110,23 @@ export default function OrderPanel() {
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col h-full shadow-lg overflow-hidden">
         
         {/* HEADER INFO */}
-        <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/50 grid grid-cols-2 gap-3 shrink-0">
-          <label className="flex items-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)] transition-all">
+        <div className="p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] grid grid-cols-2 gap-3 shrink-0">
+          <label className="flex items-center bg-white border border-[var(--color-border)] rounded-xl px-3 py-2.5 text-sm focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/20 transition-all shadow-sm">
             <User size={16} className="text-[var(--color-text-muted)] mr-2 shrink-0" />
             <input 
               type="text" 
               placeholder="Nama Pelanggan" 
-              className="bg-transparent w-full text-white placeholder-[var(--color-text-muted)] outline-none"
+              className="bg-transparent w-full text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none font-medium"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
             />
           </label>
-          <label className="flex items-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-3 py-2 text-sm focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)] transition-all">
+          <label className="flex items-center bg-white border border-[var(--color-border)] rounded-xl px-3 py-2.5 text-sm focus-within:border-[var(--color-accent)] focus-within:ring-1 focus-within:ring-[var(--color-accent)]/20 transition-all shadow-sm">
             <Hash size={16} className="text-[var(--color-text-muted)] mr-2 shrink-0" />
             <input 
               type="text" 
               placeholder="Meja" 
-              className="bg-transparent w-full text-white placeholder-[var(--color-text-muted)] outline-none"
+              className="bg-transparent w-full text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none font-medium"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
             />
@@ -165,7 +165,7 @@ export default function OrderPanel() {
         </div>
 
         {/* SUMMARY FOOTER */}
-        <div className="p-4 bg-[var(--color-surface-2)]/80 border-t border-[var(--color-border)] shrink-0 space-y-3 shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-10 pb-6 rounded-b-2xl">
+        <div className="p-5 bg-white border-t border-[var(--color-border)] shrink-0 space-y-4 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] z-10 pb-8 rounded-b-2xl">
           <div className="flex justify-between text-sm text-[var(--color-text-muted)] border-b border-[var(--color-border)] pb-3">
             <span>Subtotal</span>
             <span className="font-mono">Rp {subtotal.toLocaleString("id-ID")}</span>
@@ -179,7 +179,7 @@ export default function OrderPanel() {
             <button 
               onClick={handleSaveAsUnpaid}
               disabled={isSubmitting || items.length === 0}
-              className="flex items-center justify-center py-3 px-4 rounded-xl font-semibold bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] hover:border-white/20 transition-all text-sm disabled:opacity-50"
+              className="flex items-center justify-center py-3.5 px-4 rounded-xl font-semibold bg-white border border-[var(--color-border)] hover:bg-[var(--color-bg)] hover:border-[var(--color-accent)]/30 transition-all text-sm disabled:opacity-50 shadow-sm"
             >
               Simpan Draft
             </button>

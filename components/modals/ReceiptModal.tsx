@@ -24,9 +24,9 @@ export default function ReceiptModal({ isOpen, onClose, order, store }: ReceiptM
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-surface-2)] shrink-0">
-          <h2 className="text-lg font-bold">Cetak Struk</h2>
-          <button onClick={onClose} className="p-2 bg-[var(--color-surface)] hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] bg-[var(--color-bg)] shrink-0">
+          <h2 className="text-lg font-bold text-[var(--color-text)]">Cetak Struk</h2>
+          <button onClick={onClose} className="p-2 border border-[var(--color-border)] bg-white hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -88,10 +88,10 @@ export default function ReceiptModal({ isOpen, onClose, order, store }: ReceiptM
           </div>
         </div>
 
-        <div className="p-4 border-t border-[var(--color-border)] bg-[var(--color-surface-2)] shrink-0">
+        <div className="p-4 border-t border-[var(--color-border)] bg-white shrink-0">
           <button
             onClick={handlePrint}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-white bg-[var(--color-accent)] hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white bg-[var(--color-accent)] hover:opacity-90 shadow-md shadow-blue-500/20 transition-all"
           >
             <Printer size={20} />
             Cetak Struk Sekarang

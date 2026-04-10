@@ -68,10 +68,13 @@ export default function PosContainer({
 
   // ONLY recalculate when deferredSearch or activeCategory changes
   const filteredProducts = products.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(deferredSearch.toLowerCase());
+    const searchLower = deferredSearch.toLowerCase();
+    const matchSearch = p.name.toLowerCase().includes(searchLower) || 
+                        (p.category?.name || "").toLowerCase().includes(searchLower);
     const matchCategory = activeCategory ? p.categoryId === activeCategory : true;
     return matchSearch && matchCategory;
   });
+
 
   const handleLogout = async () => {
     await signOut({ redirect: false });
@@ -85,22 +88,30 @@ export default function PosContainer({
         {/* LEFT COMPONENT - 60% */}
         <div className="w-full lg:w-3/5 flex flex-col h-full space-y-4 pb-[80px] lg:pb-4">
           <div className="flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold bg-gradient-to-br from-[var(--color-accent)] to-yellow-300 bg-clip-text text-transparent shrink-0">Menu</h1>
+            <h1 className="text-2xl font-bold text-[var(--color-text)] shrink-0">Menu</h1>
             <div className="relative flex-1 max-w-xs">
               <input 
                 type="text" 
                 placeholder="Cari menu..." 
-                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[var(--color-accent)] transition-all"
+                className="w-full bg-white border border-[var(--color-border)] rounded-full px-4 pr-10 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] transition-all"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {search && (
+                <button 
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
             
             {/* Menu Dropdown Button */}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2.5 bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl transition-all active:scale-95"
+                className="p-2.5 bg-white hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl transition-all active:scale-95"
               >
                 <MenuIcon size={20} />
               </button>
@@ -112,8 +123,8 @@ export default function PosContainer({
                     className="fixed inset-0 z-40" 
                     onClick={() => setIsMenuOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]/50">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-[var(--color-border)] rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3 border-b border-[var(--color-border)] bg-[var(--color-surface-2)]">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[var(--color-accent)]/10 rounded-full flex items-center justify-center">
                           <User size={20} className="text-[var(--color-accent)]" />
@@ -172,7 +183,7 @@ export default function PosContainer({
       </div>
 
       {/* DRAFT BAR AT BOTTOM */}
-      <div className="h-16 shrink-0 border-t border-[var(--color-border)] bg-[var(--color-surface)] flex items-center px-4 md:px-6 z-10 shadow-t-xl">
+      <div className="h-16 shrink-0 border-t border-[var(--color-border)] bg-white flex items-center px-4 md:px-6 z-10 shadow-sm">
         <DraftBar />
       </div>
 
@@ -188,7 +199,7 @@ export default function PosContainer({
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" 
             onClick={() => setIsMobileCartOpen(false)} 
           />
-          <div className="bg-[var(--color-bg)] w-full h-[88vh] rounded-t-3xl shadow-2xl relative flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[76px] md:pb-6">
+          <div className="bg-white w-full h-[88vh] rounded-t-3xl shadow-2xl relative flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[76px] md:pb-6">
             <MobileCartHeader onClose={() => setIsMobileCartOpen(false)} />
             <div className="flex-1 overflow-hidden p-2 relative">
               <OrderPanel />
