@@ -7,14 +7,7 @@ export default async function OrdersPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  // Load last 50 orders unconditionally for now, client side filtering for speed
-  const orders = await prisma.order.findMany({
-    where: { storeId: session.user.storeId },
-    include: { items: true, cashier: { select: { name: true } } },
-    orderBy: { createdAt: 'desc' },
-    take: 50
-  });
-
+  // Move data fetching to client for instant "sat-set" navigation.
   return (
     <div className="p-6 md:p-10 h-full overflow-y-auto">
       <div className="flex flex-col space-y-6 max-w-6xl mx-auto">
@@ -23,7 +16,7 @@ export default async function OrdersPage() {
           <p className="text-[var(--color-text-muted)] mt-1">Kelola dan lihat status seluruh pesanan</p>
         </div>
         
-        <OrderListClient initialOrders={orders} />
+        <OrderListClient initialOrders={[]} />
       </div>
     </div>
   );

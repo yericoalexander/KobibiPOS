@@ -12,11 +12,20 @@ export default function ReportsPage() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isSending, setIsSending] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
+    setIsLoading(true);
     fetch(`/api/reports/summary?date=${selectedDate}`)
       .then(r => r.json())
-      .then(setData)
-      .catch(() => toast.error("Gagal mengambil laporan"));
+      .then(d => {
+        setData(d);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        toast.error("Gagal mengambil laporan");
+        setIsLoading(false);
+      });
   }, [selectedDate]);
 
   const handleExportPDF = () => {
@@ -94,16 +103,9 @@ export default function ReportsPage() {
     }
   };
 
-  if (!data) return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center space-y-3">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--color-accent)] border-t-transparent mx-auto"></div>
-        <p className="text-[var(--color-text-muted)]">Memuat laporan...</p>
-      </div>
-    </div>
-  );
+  // No more full-screen spinner. We show the shell and use skeletons.
 
-  if (data.error) return (
+  if (data?.error) return (
     <div className="p-6">
       <div className="bg-red-500/10 border border-red-500 rounded-xl p-6 text-center">
         <p className="text-red-500 font-bold">Error: {data.error}</p>
@@ -134,15 +136,16 @@ export default function ReportsPage() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={handleExportPDF}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text)] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-border)] transition-all border border-[var(--color-border)]"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-text)] px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--color-border)] transition-all border border-[var(--color-border)] disabled:opacity-50"
                   title="Unduh PDF"
+                  disabled={isLoading || !data}
                 >
                   <FileText size={16} className="text-red-500" />
                   <span>PDF</span>
                 </button>
                 <button 
                   onClick={handleSendEmail}
-                  disabled={isSending}
+                  disabled={isSending || isLoading || !data}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-[var(--color-accent)] text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-blue-500/20"
                 >
                   {isSending ? (
@@ -163,30 +166,37 @@ export default function ReportsPage() {
           <StatCard 
             title="Pendapatan Kotor" 
             subtitle="Omzet"
-            value={`Rp ${(data.summary?.totalRevenue || 0).toLocaleString("id-ID")}`} 
+            value={isLoading ? 0 : (data?.summary?.totalRevenue || 0)} 
             icon={<DollarSign size={20} />}
             color="amber"
+            isLoading={isLoading}
+            isCurrency
           />
           <StatCard 
             title="Pendapatan Bersih" 
             subtitle="Untung"
-            value={`Rp ${(data.summary?.totalProfit || 0).toLocaleString("id-ID")}`} 
+            value={isLoading ? 0 : (data?.summary?.totalProfit || 0)} 
             icon={<TrendingUp size={20} />}
             color="green"
+            isLoading={isLoading}
+            isCurrency
           />
           <StatCard 
             title="Total Modal" 
             subtitle="HPP"
-            value={`Rp ${(data.summary?.totalCapital || 0).toLocaleString("id-ID")}`} 
+            value={isLoading ? 0 : (data?.summary?.totalCapital || 0)} 
             icon={<ShoppingCart size={20} />}
             color="blue"
+            isLoading={isLoading}
+            isCurrency
           />
           <StatCard 
             title="Transaksi Sukses" 
             subtitle="Total"
-            value={data.summary?.transactionsCount || 0} 
+            value={isLoading ? 0 : (data?.summary?.transactionsCount || 0)} 
             icon={<ShoppingCart size={20} />}
             color="purple"
+            isLoading={isLoading}
           />
         </div>
 
@@ -209,7 +219,11 @@ export default function ReportsPage() {
               </div>
             </div>
             
-            {data.chartData && data.chartData.length > 0 ? (
+            {isLoading ? (
+               <div className="h-64 md:h-80 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-[var(--color-accent)] border-t-transparent"></div>
+               </div>
+            ) : data?.chartData && data.chartData.length > 0 ? (
               <div className="h-64 md:h-80 w-full -ml-4 md:-ml-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -284,7 +298,11 @@ export default function ReportsPage() {
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 md:p-6 overflow-hidden flex flex-col h-[400px] lg:h-auto">
             <h3 className="font-bold text-lg mb-4 shrink-0">Penjualan Produk</h3>
             <div className="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
-              {(data.productSales || []).map((p: any, i: number) => (
+              {isLoading ? (
+                [1,2,3,4,5].map(i => (
+                  <div key={i} className="h-12 bg-[var(--color-surface-2)] animate-pulse rounded-xl" />
+                ))
+              ) : (data?.productSales || []).map((p: any, i: number) => (
                 <div 
                   key={i} 
                   className="flex justify-between items-center p-3 bg-[var(--color-surface-2)]/40 hover:bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl transition-colors"
@@ -307,7 +325,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
               ))}
-              {(!data.productSales || data.productSales.length === 0) && (
+              {!isLoading && (!data?.productSales || data.productSales.length === 0) && (
                 <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">
                   Belum ada data di tanggal ini
                 </div>
@@ -332,12 +350,14 @@ export default function ReportsPage() {
           
           {/* Mobile View */}
           <div className="block md:hidden divide-y divide-[var(--color-border)]">
-            {data.transactions?.length === 0 ? (
+            {isLoading ? (
+               [1,2,3].map(i => <div key={i} className="p-4 h-24 bg-white animate-pulse" />)
+            ) : data?.transactions?.length === 0 ? (
               <div className="p-8 text-center text-[var(--color-text-muted)] text-sm italic">
                 Tidak ada transaksi di tanggal ini
               </div>
             ) : (
-              data.transactions?.map((t: any) => (
+              data?.transactions?.map((t: any) => (
                 <div key={t.id} className="p-4 space-y-3 bg-white">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -387,14 +407,20 @@ export default function ReportsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
-                {data.transactions?.length === 0 ? (
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={6} className="px-6 py-4 h-12 bg-[var(--color-surface-2)]"></td>
+                    </tr>
+                  ))
+                ) : data?.transactions?.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-10 text-center text-[var(--color-text-muted)] italic">
                       Tidak ada transaksi di tanggal ini
                     </td>
                   </tr>
                 ) : (
-                  data.transactions?.map((t: any) => (
+                  data?.transactions?.map((t: any) => (
                     <tr key={t.id} className="hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-6 py-4">
                         <span className="bg-white px-2.5 py-1 rounded-md font-mono text-xs border border-[var(--color-border)] font-bold text-[var(--color-text)]">
@@ -435,13 +461,17 @@ function StatCard({
   subtitle,
   value, 
   icon,
-  color = "amber" 
+  color = "amber",
+  isLoading = false,
+  isCurrency = false
 }: { 
   title: string;
   subtitle: string;
   value: string | number;
   icon: React.ReactNode;
   color?: "amber" | "green" | "blue" | "purple";
+  isLoading?: boolean;
+  isCurrency?: boolean;
 }) {
   const colorClasses = {
     amber: "text-[var(--color-accent)] bg-[var(--color-accent)]/10 border-[var(--color-accent)]/20",
@@ -461,9 +491,13 @@ function StatCard({
           {icon}
         </div>
       </div>
-      <p className={`text-xl md:text-2xl font-bold font-mono ${colorClasses[color].split(' ')[0]} truncate`}>
-        {value}
-      </p>
+      {isLoading ? (
+        <div className="h-8 w-full bg-[var(--color-surface-2)] animate-pulse rounded-lg" />
+      ) : (
+        <p className={`text-xl md:text-2xl font-bold font-mono ${colorClasses[color].split(' ')[0]} truncate`}>
+          {isCurrency ? `Rp ${Number(value).toLocaleString("id-ID")}` : value}
+        </p>
+      )}
     </div>
   );
 }

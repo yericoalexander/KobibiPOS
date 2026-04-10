@@ -19,6 +19,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+
+  @@index([storeId])
 }
 
 model Store {
@@ -42,6 +44,8 @@ model Category {
   store     Store     @relation(fields: [storeId], references: [id])
   products  Product[]
   createdAt DateTime  @default(now())
+
+  @@index([storeId])
 }
 
 model Product {
@@ -58,6 +62,9 @@ model Product {
   category    Category?   @relation(fields: [categoryId], references: [id])
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
+
+  @@index([storeId, active])
+  @@index([categoryId])
 }
 
 model Order {
@@ -80,6 +87,8 @@ model Order {
   items         OrderItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@index([storeId, status, createdAt])
 }
 
 model OrderItem {
@@ -95,6 +104,8 @@ model OrderItem {
   note        String?
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
 }
 
 enum Role {

@@ -10,6 +10,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { useRouter } from "next/navigation";
 import PaymentModal from "../modals/PaymentModal";
 import ReceiptModal from "../modals/ReceiptModal";
+import OrderDetailsModal from "../modals/OrderDetailsModal";
 import { cn } from "@/lib/utils";
 
 export default function OrderListClient({ initialOrders }: { initialOrders: any[] }) {
@@ -20,6 +21,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
   const [isLoading, setIsLoading] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState<any>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<any>(null);
@@ -28,10 +30,18 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
   const cartStore = useCartStore();
   const router = useRouter();
 
-  useEffect(() => {
-    // We already have initialOrders for "ALL" status and no date filter
-    if (statusFilter === "ALL" && !selectedDate && orders === initialOrders) return;
+  const [isFirstRender, setIsFirstRender] = useState(true);
 
+  useEffect(() => {
+    // Skip fetching on mount only if initialOrders is already provided (SSR)
+    // If initialOrders is empty, we must fetch even on first render
+    if (isFirstRender && statusFilter === "ALL" && !selectedDate && initialOrders.length > 0) {
+      setIsFirstRender(false);
+      return;
+    }
+    setIsFirstRender(false);
+
+    const controller = new AbortController();
     const fetchOrders = async () => {
         setIsLoading(true);
         try {
@@ -39,20 +49,29 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
             if (statusFilter !== "ALL") params.append("status", statusFilter);
             if (selectedDate) params.append("date", selectedDate);
             
-            const res = await fetch(`/api/orders?${params.toString()}`);
+            const res = await fetch(`/api/orders?${params.toString()}`, {
+              signal: controller.signal
+            });
             if (!res.ok) throw new Error("Gagal mengambil data riwayat");
             const data = await res.json();
             setOrders(data);
         } catch (e: any) {
-            toast.error(e.message);
+            if (e.name !== 'AbortError') {
+              toast.error(e.message);
+            }
         } finally {
-            setIsLoading(false);
+            if (!controller.signal.aborted) {
+              setIsLoading(false);
+            }
         }
     };
 
-    const timer = setTimeout(fetchOrders, 100); // Small debounce
-    return () => clearTimeout(timer);
-  }, [statusFilter, selectedDate, initialOrders]);
+    const timer = setTimeout(fetchOrders, 150); // Small debounce
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [statusFilter, selectedDate, isFirstRender]);
 
   const filteredOrders = orders.filter((o) => {
     const matchSearch =
@@ -136,6 +155,11 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
   const startPrint = (order: any) => {
     setActiveOrder(order);
     setReceiptOpen(true);
+  }
+
+  const openDetails = (order: any) => {
+    setActiveOrder(order);
+    setDetailsOpen(true);
   }
 
   return (
@@ -225,7 +249,11 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
                 </tr>
               ) : (
                 filteredOrders.map(o => (
-                  <tr key={o.id} className="hover:bg-[var(--color-surface-2)] transition-colors">
+                  <tr 
+                    key={o.id} 
+                    onClick={() => openDetails(o)}
+                    className="hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
+                  >
                     <td className="px-6 py-4 font-mono font-bold text-[var(--color-text)]">{o.orderNumber}</td>
                     <td className="px-6 py-4"><StatusBadge status={o.status} /></td>
                     <td className="px-6 py-4">
@@ -237,7 +265,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
                     <td className="px-6 py-4 text-[var(--color-text-muted)]">
                       {new Date(o.createdAt).toLocaleString("id-ID", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                     </td>
-                    <td className="px-6 py-4 flex justify-end gap-2">
+                    <td className="px-6 py-4 flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       {o.status === "DRAFT" && (
                          <button onClick={() => handleAction(o.id, "SUBMIT")} className="p-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white rounded-lg transition-all" title="Submit (Belum Bayar)">
                            <Edit3 size={16} />
@@ -283,7 +311,11 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
           </div>
         ) : (
           filteredOrders.map(o => (
-            <div key={o.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-3">
+            <div 
+              key={o.id} 
+              onClick={() => openDetails(o)}
+              className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-4 space-y-3 active:scale-[0.98] transition-all cursor-pointer"
+            >
               {/* Order Number & Status */}
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
@@ -316,7 +348,7 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
               </div>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
                 {o.status === "DRAFT" && (
                   <button onClick={() => handleAction(o.id, "SUBMIT")} className="flex-1 px-3 py-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white rounded-lg transition-all text-xs font-semibold flex items-center justify-center gap-1" title="Submit">
                     <Edit3 size={14} /> Submit
@@ -405,6 +437,13 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
             </div>
           </div>
         </div>
+      )}
+      {activeOrder && detailsOpen && (
+        <OrderDetailsModal 
+          isOpen={detailsOpen} 
+          onClose={() => {setDetailsOpen(false); setActiveOrder(null)}} 
+          order={activeOrder} 
+        />
       )}
     </>
   );

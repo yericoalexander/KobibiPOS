@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Search, X } from "lucide-react";
 
 import toast from "react-hot-toast";
+import ConfirmModal from "@/components/modals/ConfirmModal";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string, name: string } | null>(null);
 
 
   const fetchCategories = () => {
@@ -42,8 +44,7 @@ export default function CategoriesPage() {
     }
   }
 
-  const handleDelete = async (id: string, catName: string) => {
-    if (!confirm(`Hapus kategori ${catName}?`)) return;
+  const handleDelete = async (id: string) => {
     try {
       const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
@@ -122,7 +123,7 @@ export default function CategoriesPage() {
                     <tr key={c.id} className="hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-6 py-4 font-semibold text-[var(--color-text)]">{c.name}</td>
                       <td className="px-6 py-4 text-right">
-                        <button onClick={() => handleDelete(c.id, c.name)} className="p-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Hapus">
+                        <button onClick={() => setConfirmDelete({ id: c.id, name: c.name })} className="p-2 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Hapus">
                           <Trash2 size={16} />
                         </button>
                       </td>
@@ -135,6 +136,16 @@ export default function CategoriesPage() {
         </div>
 
       </div>
+
+      <ConfirmModal 
+        isOpen={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete.id)}
+        title="Hapus Kategori?"
+        message={`Apakah Anda yakin ingin menghapus kategori "${confirmDelete?.name}"? Semua produk dalam kategori ini akan berubah menjadi 'Tanpa Kategori'.`}
+        variant="danger"
+        confirmText="Ya, Hapus"
+      />
     </div>
   );
 }

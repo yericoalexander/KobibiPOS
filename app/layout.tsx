@@ -24,12 +24,18 @@ export const metadata: Metadata = {
   title: "NGANGKRING KOBIBI",
   description: "Aplikasi POS untuk Ngangkring Kobibi",
   manifest: "/manifest.json",
-  themeColor: "#f59e0b",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
   icons: {
     icon: "/icon-192.png",
     apple: "/icon-192.png",
   },
+};
+
+export const viewport = {
+  themeColor: "#f59e0b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

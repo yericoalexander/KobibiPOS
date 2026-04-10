@@ -26,57 +26,84 @@ export async function GET(req: Request) {
     const endOfDay = new Date(startOfDay);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const [dateOrders, unpaidCount, productsData, allOrders] = await Promise.all([
-      prisma.order.findMany({
+    // Get summary stats for the range
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [summary, unpaidCount, productSalesStats, chartDataRaw] = await Promise.all([
+      prisma.order.aggregate({
         where: { storeId, status: OrderStatus.PAID, createdAt: { gte: startOfDay, lte: endOfDay } },
-        orderBy: { createdAt: 'desc' }
+        _sum: { total: true, totalProfit: true },
+        _count: { id: true },
+        _avg: { total: true }
       }),
       prisma.order.count({
         where: { storeId, status: OrderStatus.UNPAID },
       }),
-      prisma.product.findMany({
-        where: { storeId }, include: { orderItems: { include: { order: true }} }
+      // Top products sold for the selected day
+      prisma.orderItem.groupBy({
+        by: ['productId', 'name'],
+        where: {
+          order: {
+            storeId,
+            status: OrderStatus.PAID,
+            createdAt: { gte: startOfDay, lte: endOfDay }
+          }
+        },
+        _sum: { qty: true, subtotal: true },
+        orderBy: { _sum: { qty: 'desc' } },
+        take: 20
       }),
+      // Aggregated chart data for the last 30 days (Daily Stats)
+      // Since standard Prisma groupBy doesn't support DATE(createdAt) without raw sql, 
+      // we'll fetch only the essentials and aggregate in memory for 30 days which is small enough.
       prisma.order.findMany({
-        where: { storeId, status: OrderStatus.PAID },
+        where: { 
+          storeId, 
+          status: OrderStatus.PAID,
+          createdAt: { gte: thirtyDaysAgo } 
+        },
+        select: { createdAt: true, total: true, totalProfit: true },
         orderBy: { createdAt: 'asc' }
       })
     ]);
 
-    const totalRevenue = dateOrders.reduce((sum, o) => sum + o.total, 0);
-    const totalProfit = dateOrders.reduce((sum, o) => sum + o.totalProfit, 0);
+    const totalRevenue = summary._sum.total || 0;
+    const totalProfit = summary._sum.totalProfit || 0;
+    const transactionsCount = summary._count.id || 0;
+    const avgValue = summary._avg.total || 0;
     const totalCapital = totalRevenue - totalProfit;
-    const transactionsCount = dateOrders.length;
-    const avgValue = transactionsCount > 0 ? totalRevenue / transactionsCount : 0;
 
-    // Product sales stats for that date
-    const productSales = productsData.map(p => {
-      const soldItems = p.orderItems.filter(oi => 
-        oi.order.status === OrderStatus.PAID && 
-        oi.order.createdAt >= startOfDay && 
-        oi.order.createdAt <= endOfDay
-      );
-      const sold = soldItems.reduce((sum, oi) => sum + oi.qty, 0);
-      const revenue = soldItems.reduce((sum, oi) => sum + (oi.price * oi.qty), 0);
-      return { name: p.name, sold, revenue };
-    }).filter(p => p.sold > 0).sort((a, b) => b.sold - a.sold);
+    // Aggregate chart data by day in memory (more portable than raw SQL)
+    const dailyStatsMap = new Map<string, { date: string, revenue: number, profit: number }>();
+    chartDataRaw.forEach(o => {
+      const day = o.createdAt.toISOString().split('T')[0];
+      const existing = dailyStatsMap.get(day) || { date: day, revenue: 0, profit: 0 };
+      existing.revenue += o.total;
+      existing.profit += o.totalProfit;
+      dailyStatsMap.set(day, existing);
+    });
+    const chartData = Array.from(dailyStatsMap.values());
+
+    // Transform products
+    const productSales = productSalesStats.map(stat => ({
+      name: stat.name,
+      sold: stat._sum.qty || 0,
+      revenue: stat._sum.subtotal || 0
+    }));
+
+    const dateOrders = await prisma.order.findMany({
+      where: { storeId, status: OrderStatus.PAID, createdAt: { gte: startOfDay, lte: endOfDay } },
+      select: { orderNumber: true, createdAt: true, customerName: true, total: true, totalProfit: true },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
 
     return NextResponse.json({
-      summary: {
-        totalRevenue,
-        totalProfit,
-        totalCapital,
-        transactionsCount,
-        avgValue,
-        unpaidCount
-      },
+      summary: { totalRevenue, totalProfit, totalCapital, transactionsCount, avgValue, unpaidCount },
       topProducts: productSales.slice(0, 5),
       productSales,
-      chartData: allOrders.map(o => ({
-        date: o.createdAt.toLocaleDateString(),
-        revenue: o.total,
-        profit: o.totalProfit
-      })),
+      chartData,
       transactions: dateOrders.map(o => ({
         id: o.orderNumber,
         date: o.createdAt.toLocaleString('id-ID'),
@@ -85,6 +112,10 @@ export async function GET(req: Request) {
         profit: o.totalProfit,
         capital: o.total - o.totalProfit
       }))
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300',
+      }
     });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

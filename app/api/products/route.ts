@@ -18,8 +18,12 @@ export async function GET(req: Request) {
       include: { category: true },
       orderBy: { name: 'asc' }
     });
-    
-    return NextResponse.json(products);
+
+    return NextResponse.json(products, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
+      }
+    });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -46,6 +50,25 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(product);
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+export async function PATCH(req: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user || session.user.role === 'KASIR') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    await prisma.product.updateMany({
+      where: { storeId: session.user.storeId },
+      data: {
+        stock: { increment: 10 }
+      }
+    });
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }

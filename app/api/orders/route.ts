@@ -31,7 +31,8 @@ export async function GET(req: Request) {
         cashier: { select: { name: true } },
         items: true // added items for detailed view if needed
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      take: 100 // Optimization: limit to most recent 100 orders
     });
     
     return NextResponse.json(orders);

@@ -1,21 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit3, X, Search } from "lucide-react";
+import { Plus, Trash2, Edit3, X, Search, Zap } from "lucide-react";
 
 import toast from "react-hot-toast";
+import ConfirmModal from "@/components/modals/ConfirmModal";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", price: "", costPrice: "", stock: "", categoryId: "", active: true });
+
+  // Confirmation States
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string, name: string } | null>(null);
+  const [confirmBulk, setConfirmBulk] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -67,7 +73,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if(!confirm(`Hapus produk ${name}?`)) return;
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
@@ -78,6 +83,20 @@ export default function ProductsPage() {
     }
   };
 
+  const handleBulkAddStock = async () => {
+    setIsBulkUpdating(true);
+    try {
+      const res = await fetch("/api/products", { method: "PATCH" });
+      if (!res.ok) throw new Error();
+      toast.success("Berhasil menambah 10 stok ke semua produk");
+      fetchData();
+    } catch {
+      toast.error("Gagal update stok massal");
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const filteredProducts = products.filter(p => {
     const searchLower = search.toLowerCase();
     return p.name.toLowerCase().includes(searchLower) || 
@@ -85,8 +104,8 @@ export default function ProductsPage() {
   });
 
   return (
-
     <div className="p-4 md:p-6 lg:p-10 h-full overflow-y-auto custom-scrollbar">
+      {/* Search and Bulk Action */}
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -98,24 +117,35 @@ export default function ProductsPage() {
           </button>
         </div>
 
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={18} />
-          <input 
-            type="text" 
-            placeholder="Cari nama produk atau kategori..." 
-            className="w-full bg-white border border-[var(--color-border)] focus:border-[var(--color-accent)] rounded-xl py-3 pl-12 pr-10 focus:outline-none transition-all text-sm shadow-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button 
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1"
-              title="Hapus pencarian"
-            >
-              <X size={18} />
-            </button>
-          )}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" size={18} />
+            <input 
+              type="text" 
+              placeholder="Cari nama produk atau kategori..." 
+              className="w-full bg-white border border-[var(--color-border)] focus:border-[var(--color-accent)] rounded-xl py-3 pl-12 pr-10 focus:outline-none transition-all text-sm shadow-sm text-[var(--color-text)] placeholder:text-[var(--color-text-muted)]"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-red-500 transition-colors p-1"
+                title="Hapus pencarian"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          
+          <button 
+            onClick={() => setConfirmBulk(true)}
+            disabled={isBulkUpdating}
+            className="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-xl shadow-md shadow-amber-500/20 transition-all whitespace-nowrap text-sm"
+          >
+            <Zap size={16} className={isBulkUpdating ? "animate-pulse" : ""} />
+            {isBulkUpdating ? "Memproses..." : "Tambah 10 Stok Semua"}
+          </button>
         </div>
 
 
@@ -162,7 +192,7 @@ export default function ProductsPage() {
                           <button onClick={() => openEdit(p)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded-lg transition-all mr-2" title="Edit">
                             <Edit3 size={16} />
                           </button>
-                          <button onClick={() => handleDelete(p.id, p.name)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Hapus">
+                          <button onClick={() => setConfirmDelete({ id: p.id, name: p.name })} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Hapus">
                             <Trash2 size={16} />
                           </button>
                         </td>
@@ -211,7 +241,7 @@ export default function ProductsPage() {
                   </div>
                   <div>
                     <p className="text-xs text-[var(--color-text-muted)] font-medium">Stok</p>
-                    <p className={`text-sm font-mono font-bold ${p.stock <= 5 ? 'text-orange-400' : 'text-green-400'}`}>{p.stock}</p>
+                    <p className={`text-sm font-mono font-bold ${p.stock <= 5 ? 'text-orange-500 font-bold' : 'text-[var(--color-text)]'}`}>{p.stock}</p>
                   </div>
                 </div>
 
@@ -220,7 +250,7 @@ export default function ProductsPage() {
                   <button onClick={() => openEdit(p)} className="flex-1 px-3 py-2.5 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-1">
                     <Edit3 size={16} /> Edit
                   </button>
-                  <button onClick={() => handleDelete(p.id, p.name)} className="flex-1 px-3 py-2.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-1">
+                  <button onClick={() => setConfirmDelete({ id: p.id, name: p.name })} className="flex-1 px-3 py-2.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all text-sm font-semibold flex items-center justify-center gap-1">
                     <Trash2 size={16} /> Hapus
                   </button>
                 </div>
@@ -301,6 +331,27 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* CONFIRMATION MODALS */}
+      <ConfirmModal 
+        isOpen={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => confirmDelete && handleDelete(confirmDelete.id, confirmDelete.name)}
+        title="Hapus Produk?"
+        message={`Apakah Anda yakin ingin menghapus "${confirmDelete?.name}"? Tindakan ini tidak dapat dibatalkan.`}
+        variant="danger"
+        confirmText="Ya, Hapus"
+      />
+
+      <ConfirmModal 
+        isOpen={confirmBulk}
+        onClose={() => setConfirmBulk(false)}
+        onConfirm={handleBulkAddStock}
+        title="Tambah Stok Massal?"
+        message="Ini akan menambahkan 10 stok ke SEMUA produk yang ada di toko Anda. Lanjutkan?"
+        variant="warning"
+        confirmText="Ya, Tambahkan"
+      />
     </div>
   );
 }

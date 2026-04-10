@@ -35,18 +35,59 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     const existingOrder = await prisma.order.findUnique({ where: { id: id, storeId: session.user.storeId }});
     if (!existingOrder) return NextResponse.json({ error: 'Not Found' }, { status: 404 });
 
+    // Pre-processing for actions that might also update items (SUBMIT, PAY, UPDATE_ITEMS)
+    const shouldUpdateItems = (action === 'SUBMIT' || action === 'PAY' || action === 'UPDATE_ITEMS') && body.items;
+    
+    if (shouldUpdateItems) {
+      if (existingOrder.status !== 'DRAFT' && existingOrder.status !== 'UNPAID') {
+        throw new Error("Cannot update items on a finalized order");
+      }
+
+      const productIds = body.items.map((i: any) => i.id);
+      const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
+      const productMap = Object.fromEntries(products.map(p => [p.id, p]));
+      
+      let totalProfitUpdate = 0;
+      const mappedItems = body.items.map((item: any) => {
+        const dbProduct = productMap[item.id];
+        const costPrice = dbProduct ? dbProduct.costPrice : 0;
+        const profit = (item.price - costPrice) * item.qty;
+        totalProfitUpdate += profit;
+        return {
+          productId: item.id,
+          name: item.name,
+          qty: item.qty,
+          price: item.price,
+          costPrice: costPrice,
+          subtotal: item.subtotal,
+          profit: profit,
+          note: item.note
+        };
+      });
+
+      // Clear old items
+      await prisma.orderItem.deleteMany({ where: { orderId: id } });
+      
+      updateData.items = { create: mappedItems };
+      updateData.subtotal = body.items.reduce((sum: number, item: any) => sum + item.subtotal, 0);
+      updateData.total = updateData.subtotal;
+      updateData.totalProfit = totalProfitUpdate;
+      updateData.customerName = body.customerName;
+      updateData.tableNumber = body.tableNumber;
+    }
+
     switch (action) {
       case 'SUBMIT':
-        if (existingOrder.status !== 'DRAFT') throw new Error("Can only submit DRAFT");
         updateData.status = OrderStatus.UNPAID;
         break;
       case 'PAY':
-        if (existingOrder.status !== 'DRAFT' && existingOrder.status !== 'UNPAID') throw new Error("Invalid status for PAY");
         updateData.status = OrderStatus.PAID;
         updateData.paidAt = new Date();
         updateData.paymentMethod = body.paymentMethod;
         updateData.amountPaid = Number(body.amountPaid);
-        updateData.change = updateData.amountPaid - existingOrder.total;
+        // Recalculate change based on potentially updated total
+        const finalTotal = updateData.total ?? existingOrder.total;
+        updateData.change = updateData.amountPaid - finalTotal;
         
         // Stock Deduction
         const orderItems = await prisma.orderItem.findMany({ where: { orderId: id } });
@@ -65,38 +106,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         updateData.status = OrderStatus.VOID;
         break;
       case 'UPDATE_ITEMS':
-        if (existingOrder.status !== 'DRAFT' && existingOrder.status !== 'UNPAID') throw new Error("Read-only order");
-        
-        const productIds = body.items?.map((i: any) => i.id) || [];
-        const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
-        const productMap = Object.fromEntries(products.map(p => [p.id, p]));
-        
-        let totalProfitUpdate = 0;
-        const mappedItems = body.items?.map((item: any) => {
-          const dbProduct = productMap[item.id];
-          const costPrice = dbProduct ? dbProduct.costPrice : 0;
-          const profit = (item.price - costPrice) * item.qty;
-          totalProfitUpdate += profit;
-          return {
-            productId: item.id,
-            name: item.name,
-            qty: item.qty,
-            price: item.price,
-            costPrice: costPrice,
-            subtotal: item.subtotal,
-            profit: profit,
-            note: item.note
-          };
-        }) || [];
-
-        // We delete old items and recreate
-        await prisma.orderItem.deleteMany({ where: { orderId: id } });
-        updateData.items = { create: mappedItems };
-        updateData.subtotal = body.items?.reduce((sum: number, item: any) => sum + item.subtotal, 0) || 0;
-        updateData.total = updateData.subtotal;
-        updateData.totalProfit = totalProfitUpdate;
-        updateData.customerName = body.customerName;
-        updateData.tableNumber = body.tableNumber;
+        // logic handled above by shouldUpdateItems
         break;
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

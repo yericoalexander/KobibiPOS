@@ -36,32 +36,39 @@ export default function OrderPanel() {
     try {
       const payload = getCommonPayload();
       
-      // If there's an active draft, we check if it was already saved to DB via API (if ID starts with ORD, it is in DB, but actually in our flow Drafts are local until submitted)
-      // Actually standard: POST /api/orders
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      if (activeDraftId) {
+        // Mode EDIT: Update existing order ID
+        const res = await fetch(`/api/orders/${activeDraftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            action: "SUBMIT", 
+            ...payload 
+          })
+        });
+        if (!res.ok) throw new Error("Gagal update order");
+        toast.success("Order diperbarui (Belum Bayar)");
+        removeDraft(activeDraftId);
+      } else {
+        // Mode BARU: Create new order
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Gagal simpan order");
+        const order = await res.json();
+        
+        const patchRes = await fetch(`/api/orders/${order.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "SUBMIT" })
+        });
+        if (!patchRes.ok) throw new Error("Gagal submit order");
+        toast.success("Order tersimpan (Belum Bayar)");
+      }
       
-      if (!res.ok) throw new Error("Gagal simpan order");
-      
-      const order = await res.json();
-      
-      // Now set status to UNPAID
-      const patchRes = await fetch(`/api/orders/${order.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "SUBMIT" })
-      });
-      
-      if (!patchRes.ok) throw new Error("Gagal submit order");
-
-      toast.success("Order tersimpan (Belum Bayar)");
-      
-      if (activeDraftId) removeDraft(activeDraftId);
       clearCart();
-
     } catch (e: any) {
       toast.error(e.message);
     } finally {
@@ -72,32 +79,44 @@ export default function OrderPanel() {
   const handlePayConfirm = async (method: string, amountPaid: number) => {
     setIsSubmitting(true);
     try {
-      // 1. Create order
       const payload = getCommonPayload();
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error("Gagal buat order");
-      const order = await res.json();
-
-      // 2. Pay order
-      const payRes = await fetch(`/api/orders/${order.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "PAY", paymentMethod: method, amountPaid })
-      });
-      if (!payRes.ok) throw new Error("Gagal konfirmasi pembayaran");
-
-      toast.success("Pembayaran Lunas!");
-      setPaymentOpen(false);
       
-      if (activeDraftId) removeDraft(activeDraftId);
+      if (activeDraftId) {
+        // Mode EDIT & BAYAR: Update and Pay in one atomic action
+        const res = await fetch(`/api/orders/${activeDraftId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            action: "PAY", 
+            paymentMethod: method, 
+            amountPaid,
+            ...payload 
+          })
+        });
+        if (!res.ok) throw new Error("Gagal update & bayar order");
+        toast.success("Order diperbarui & Lunas!");
+        removeDraft(activeDraftId);
+      } else {
+        // Mode BARU & BAYAR
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error("Gagal buat order");
+        const order = await res.json();
+
+        const payRes = await fetch(`/api/orders/${order.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "PAY", paymentMethod: method, amountPaid })
+        });
+        if (!payRes.ok) throw new Error("Gagal konfirmasi pembayaran");
+        toast.success("Pembayaran Lunas!");
+      }
+
+      setPaymentOpen(false);
       clearCart();
-
-      // In real life, trigger print receipt here or show modal.
-
     } catch (e: any) {
       toast.error(e.message);
     } finally {
