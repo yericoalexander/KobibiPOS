@@ -56,20 +56,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Keranjang tidak boleh kosong' }, { status: 400 });
     }
 
-    // Generate order number with a bit more safety
+    // Generate order number: Find the latest order for today to get the next sequence
     const d = new Date();
     const dateStr = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
     const prefix = `ORD-${dateStr}`;
     
-    const count = await prisma.order.count({
+    const lastOrder = await prisma.order.findFirst({
       where: {
         storeId: session.user.storeId,
-        createdAt: { gte: new Date(new Date(d).setHours(0,0,0,0)) }
-      }
+        orderNumber: { startsWith: prefix }
+      },
+      orderBy: { orderNumber: 'desc' },
+      select: { orderNumber: true }
     });
+
+    let nextSeq = 1;
+    if (lastOrder) {
+      const parts = lastOrder.orderNumber.split('-');
+      const lastSeq = parseInt(parts[parts.length - 1]);
+      if (!isNaN(lastSeq)) {
+        nextSeq = lastSeq + 1;
+      }
+    }
     
-    // Add a random suffix or timestamp to avoid collisions if count is same
-    const orderNumber = `${prefix}-${(count + 1).toString().padStart(3, '0')}`;
+    const orderNumber = `${prefix}-${nextSeq.toString().padStart(3, '0')}`;
 
     const productIds = body.items.map((i: any) => i.id);
     const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
