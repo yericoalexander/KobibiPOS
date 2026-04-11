@@ -21,13 +21,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         stock: body.stock !== undefined ? Number(body.stock) : undefined,
         emoji: body.emoji,
         active: body.active,
-        categoryId: body.categoryId,
+        categoryId: body.categoryId || null,
       }
     });
 
     return NextResponse.json(product);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[PRODUCT_PATCH]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
@@ -45,6 +49,10 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[PRODUCT_DELETE]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
