@@ -25,7 +25,11 @@ export async function GET(req: Request) {
       }
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API_PRODUCTS_GET]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
@@ -51,7 +55,11 @@ export async function POST(req: Request) {
 
     return NextResponse.json(product);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API_PRODUCTS_POST]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 export async function PATCH(req: Request) {
@@ -70,6 +78,10 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API_PRODUCTS_PATCH]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }

@@ -17,8 +17,8 @@ export async function GET(req: Request) {
     
     if (dateStr) {
       const date = new Date(dateStr);
-      const start = new Date(date.setHours(0, 0, 0, 0));
-      const end = new Date(date.setHours(23, 59, 59, 999));
+      const start = new Date(new Date(date).setHours(0, 0, 0, 0));
+      const end = new Date(new Date(date).setHours(23, 59, 59, 999));
       where.createdAt = {
         gte: start,
         lte: end
@@ -29,15 +29,19 @@ export async function GET(req: Request) {
       where,
       include: {
         cashier: { select: { name: true } },
-        items: true // added items for detailed view if needed
+        items: true
       },
       orderBy: { createdAt: 'desc' },
-      take: 100 // Optimization: limit to most recent 100 orders
+      take: 100
     });
     
     return NextResponse.json(orders);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API_ORDERS_GET]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
@@ -48,23 +52,31 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     
-    // Generate order number
+    if (!body.items || body.items.length === 0) {
+      return NextResponse.json({ error: 'Keranjang tidak boleh kosong' }, { status: 400 });
+    }
+
+    // Generate order number with a bit more safety
     const d = new Date();
-    const prefix = `ORD-${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+    const dateStr = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+    const prefix = `ORD-${dateStr}`;
+    
     const count = await prisma.order.count({
       where: {
         storeId: session.user.storeId,
-        createdAt: { gte: new Date(d.setHours(0,0,0,0)) }
+        createdAt: { gte: new Date(new Date(d).setHours(0,0,0,0)) }
       }
     });
+    
+    // Add a random suffix or timestamp to avoid collisions if count is same
     const orderNumber = `${prefix}-${(count + 1).toString().padStart(3, '0')}`;
 
-    const productIds = body.items?.map((i: any) => i.id) || [];
+    const productIds = body.items.map((i: any) => i.id);
     const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
     const productMap = Object.fromEntries(products.map(p => [p.id, p]));
 
     let totalProfit = 0;
-    const itemsData = body.items?.map((item: any) => {
+    const itemsData = body.items.map((item: any) => {
       const dbProduct = productMap[item.id];
       const costPrice = dbProduct ? dbProduct.costPrice : 0;
       const profit = (item.price - costPrice) * item.qty;
@@ -80,7 +92,7 @@ export async function POST(req: Request) {
         profit: profit,
         note: item.note
       };
-    }) || [];
+    });
 
     const order = await prisma.order.create({
       data: {
@@ -102,6 +114,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(order);
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('[API_ORDERS_POST]', error);
+    return NextResponse.json({ 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
