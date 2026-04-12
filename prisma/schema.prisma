@@ -95,7 +95,7 @@ model Order {
 model OrderItem {
   id          String   @id @default(cuid())
   orderId     String
-  productId   String
+  productId   String?
   name        String
   price       Float
   costPrice   Float    @default(0)
@@ -104,7 +104,7 @@ model OrderItem {
   profit      Float    @default(0)
   note        String?
   order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([orderId])
 }
