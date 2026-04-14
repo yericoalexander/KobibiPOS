@@ -2,19 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Mail, TrendingUp, DollarSign, ShoppingCart, FileDown, FileText } from "lucide-react";
+import { Mail, TrendingUp, DollarSign, ShoppingCart, FileDown, FileText, Eye, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import OrderDetailsModal from "@/components/modals/OrderDetailsModal";
+import ConfirmModal from "@/components/modals/ConfirmModal";
 
 export default function ReportsPage() {
   const [data, setData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [isSending, setIsSending] = useState(false);
-
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  // New states for order preview
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isFetchingDetail, setIsFetchingDetail] = useState(false);
+
+  // States for confirmation modal
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [orderToVoid, setOrderToVoid] = useState<{ id: string, number: string } | null>(null);
+
+  const refreshData = () => {
     setIsLoading(true);
     fetch(`/api/reports/summary?date=${selectedDate}`)
       .then(r => r.json())
@@ -26,6 +36,10 @@ export default function ReportsPage() {
         toast.error("Gagal mengambil laporan");
         setIsLoading(false);
       });
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [selectedDate]);
 
   const handleExportPDF = () => {
@@ -103,7 +117,44 @@ export default function ReportsPage() {
     }
   };
 
-  // No more full-screen spinner. We show the shell and use skeletons.
+  const handlePreviewOrder = async (orderId: string) => {
+    setIsFetchingDetail(true);
+    const toastId = toast.loading("Memuat detail pesanan...");
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      if (!res.ok) throw new Error("Gagal mengambil detail pesanan");
+      const orderData = await res.json();
+      setSelectedOrder(orderData);
+      setIsPreviewOpen(true);
+      toast.dismiss(toastId);
+    } catch (error: any) {
+      toast.error(error.message, { id: toastId });
+    } finally {
+      setIsFetchingDetail(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
+    setOrderToVoid({ id: orderId, number: orderNumber });
+    setIsConfirmOpen(true);
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderToVoid) return;
+    
+    const toastId = toast.loading("Menghapus transaksi...");
+    try {
+      const res = await fetch(`/api/orders/${orderToVoid.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Gagal menghapus transaksi");
+      toast.success("Transaksi berhasil di-VOID", { id: toastId });
+      refreshData();
+    } catch (error: any) {
+      toast.error(error.message, { id: toastId });
+    } finally {
+      setIsConfirmOpen(false);
+      setOrderToVoid(null);
+    }
+  };
 
   if (data?.error) return (
     <div className="p-6">
@@ -367,6 +418,21 @@ export default function ReportsPage() {
                       <p className="text-[10px] text-[var(--color-text-muted)] mt-1 font-medium">{t.date}</p>
                       <p className="font-bold text-sm mt-1 text-[var(--color-text)]">{t.customer}</p>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => handlePreviewOrder(t.dbId)}
+                        disabled={isFetchingDetail}
+                        className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteOrder(t.dbId, t.id)}
+                        className="p-2 bg-red-50 text-red-600 rounded-lg border border-red-100 active:bg-red-100 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-[10px]">
                     <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
@@ -404,6 +470,7 @@ export default function ReportsPage() {
                   <th className="px-6 py-4 font-bold text-right">Omzet</th>
                   <th className="px-6 py-4 font-bold text-right">Modal</th>
                   <th className="px-6 py-4 font-bold text-right">Untung</th>
+                  <th className="px-6 py-4 font-bold text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border)]">
@@ -444,6 +511,25 @@ export default function ReportsPage() {
                           Rp {t.profit?.toLocaleString("id-ID") || 0}
                         </span>
                       </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button 
+                            onClick={() => handlePreviewOrder(t.dbId)}
+                            disabled={isFetchingDetail}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                            title="Detail Pesanan"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteOrder(t.dbId, t.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                            title="Hapus Transaksi"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -452,6 +538,23 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
+
+      <OrderDetailsModal 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        order={selectedOrder}
+      />
+
+      <ConfirmModal 
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={confirmDeleteOrder}
+        title="Konfirmasi Void"
+        message={`Apakah Anda yakin ingin menghapus (VOID) transaksi ${orderToVoid?.number}? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

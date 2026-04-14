@@ -94,7 +94,7 @@ export async function GET(req: Request) {
 
     const dateOrders = await prisma.order.findMany({
       where: { storeId, status: OrderStatus.PAID, createdAt: { gte: startOfDay, lte: endOfDay } },
-      select: { orderNumber: true, createdAt: true, customerName: true, total: true, totalProfit: true },
+      select: { id: true, orderNumber: true, createdAt: true, customerName: true, total: true, totalProfit: true },
       orderBy: { createdAt: 'desc' },
       take: 50
     });
@@ -106,6 +106,7 @@ export async function GET(req: Request) {
       chartData,
       transactions: dateOrders.map(o => ({
         id: o.orderNumber,
+        dbId: o.id,
         date: o.createdAt.toLocaleString('id-ID'),
         customer: o.customerName || 'Guest',
         total: o.total,
