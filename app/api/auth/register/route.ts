@@ -30,8 +30,8 @@ export async function POST(req: Request) {
       store = await prisma.store.create({
         data: {
           name: 'NGANGKRING KOBIBI',
-          address: 'Jl. Contoh No 123',
-          phone: '-',
+          address: 'Jl. A. Yani Gg. III, Pesayangan, Kedungwuluh, Kec. Purwokerto Bar., Kabupaten Banyumas, Jawa Tengah 53131',
+          phone: '087878783166',
         },
       });
     }

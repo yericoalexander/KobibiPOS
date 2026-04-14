@@ -398,7 +398,12 @@ export default function OrderListClient({ initialOrders }: { initialOrders: any[
           isOpen={receiptOpen} 
           onClose={() => {setReceiptOpen(false); setActiveOrder(null)}} 
           order={activeOrder} 
-          store={{ name: "Warung Kobibi", address: "Jl. Contoh No 123", phone: "08123456789", receiptFooter: "Terima Kasih!" }} // normally fetched from settings API or passed as prop, using dummy for now to mock store context
+          store={{ 
+            name: "NGANGKRING KOBIBI", 
+            address: "Jl. A. Yani Gg. III, Pesayangan, Kedungwuluh, Kec. Purwokerto Bar., Kabupaten Banyumas, Jawa Tengah 53131", 
+            phone: "087878783166", 
+            receiptFooter: "Terima Kasih!" 
+          }} 
         />
       )}
 
