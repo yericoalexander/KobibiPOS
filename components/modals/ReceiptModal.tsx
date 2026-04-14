@@ -23,19 +23,44 @@
    });
  
    const generatePDFBlob = (): Blob => {
-     // Dynamic height calculation
-     const itemRowHeight = 8;
-     const baseHeight = 90;
-     const docHeight = baseHeight + (order.items.length * itemRowHeight);
-     
+     const margin = 7;
+     const width = 80;
+ 
+     // ── PASS 1: calculate required document height ──────────────────────
+     const tempDoc = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 500] });
+     tempDoc.setFont("courier", "normal");
+     tempDoc.setFontSize(7.5);
+     const splitAddress = tempDoc.splitTextToSize(store.address || '', width - 15);
+ 
+     const headerH   = 12                              // top margin y-start
+                     + 6                               // store name
+                     + (splitAddress.length * 4)       // address lines
+                     + 5                               // phone
+                     + 5;                              // separator
+     const orderH    = 4                               // NO. ORDER
+                     + 4                               // TANGGAL
+                     + 4                               // PELANGGAN
+                     + (order.tableNumber ? 4 : 0)     // MEJA (optional)
+                     + (order.cashier?.name ? 4 : 0)   // KASIR (optional)
+                     + 6;                              // separator
+     const itemsH    = order.items.length * 10;        // each item = 4 (name) + 6 (price line)
+     const totalsH   = 6                               // separator
+                     + 6                               // SUBTOTAL
+                     + 6                               // TOTAL
+                     + 4                               // BAYAR
+                     + 4                               // KEMBALI
+                     + 12                              // footer gap
+                     + 10;                             // bottom padding
+ 
+     const docHeight = headerH + orderH + itemsH + totalsH;
+ 
+     // ── PASS 2: generate PDF at exact height ────────────────────────────
      const doc = new jsPDF({
        orientation: 'p',
        unit: 'mm',
        format: [80, docHeight]
      });
  
-     const margin = 7;
-     const width = 80;
      const centerX = width / 2;
      let y = 12;
  
@@ -44,10 +69,9 @@
      doc.setFontSize(14);
      doc.text(store.name.toUpperCase(), centerX, y, { align: 'center' });
      y += 6;
-     
+ 
      doc.setFont("courier", "normal");
      doc.setFontSize(7.5);
-     const splitAddress = doc.splitTextToSize(store.address || '', width - 15);
      doc.text(splitAddress, centerX, y, { align: 'center' });
      y += (splitAddress.length * 4);
      doc.text(store.phone || '', centerX, y, { align: 'center' });
@@ -61,7 +85,11 @@
      doc.setFontSize(7.5);
      doc.text(`NO. ORDER : ${order.orderNumber}`, infoX, y);
      y += 4;
-     doc.text(`TANGGAL   : ${new Date(order.createdAt).toLocaleDateString('id-ID')} ${new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`, infoX, y);
+     doc.text(
+       `TANGGAL   : ${new Date(order.createdAt).toLocaleDateString('id-ID')} ` +
+       `${new Date(order.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`,
+       infoX, y
+     );
      y += 4;
      doc.text(`PELANGGAN : ${order.customerName || '-'}`, infoX, y);
      if (order.tableNumber) {
@@ -92,6 +120,8 @@
      y += 6;
  
      // Totals
+     doc.setFont("courier", "normal");
+     doc.setFontSize(8);
      doc.text("SUBTOTAL", infoX, y);
      doc.text(order.subtotal.toLocaleString("id-ID"), width - margin, y, { align: 'right' });
      y += 6;
