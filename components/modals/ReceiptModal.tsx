@@ -4,6 +4,7 @@
  import { useReactToPrint } from "react-to-print";
  import { X, Printer, MessageCircle, Share2, FileDown } from "lucide-react";
  import jsPDF from 'jspdf';
+ import { toPng } from 'html-to-image';
  import toast from "react-hot-toast";
  
  interface ReceiptModalProps {
@@ -148,28 +149,50 @@
      return doc.output('blob');
    };
  
-   const handleSharePDF = async () => {
-     const blob = generatePDFBlob();
-     const file = new File([blob], `${filename}.pdf`, { type: 'application/pdf' });
-     
-     const shareData = {
-       files: [file],
-       title: `Struk ${store.name}`,
-       text: `Berikut adalah struk pesanan Anda (${order.orderNumber}) dari ${store.name}.`,
-     };
+   const handleShareImage = async () => {
+     if (!componentRef.current) return;
  
-     if (navigator.canShare && navigator.canShare(shareData)) {
-       try {
-         await navigator.share(shareData);
-       } catch (error: any) {
-         if (error.name !== 'AbortError') {
-           toast.error("Gagal membagikan struk");
-           handleDownloadPDF(blob); // Fallback
+     try {
+       const dataUrl = await toPng(componentRef.current, {
+         backgroundColor: '#ffffff',
+         cacheBust: true,
+         pixelRatio: 2,
+         width: componentRef.current.scrollWidth,
+         height: componentRef.current.scrollHeight,
+         style: {
+           borderRadius: '0',
+           margin: '0',
+           boxShadow: 'none',
+           border: 'none',
+           height: 'auto',
+           maxHeight: 'none',
+           overflow: 'visible',
          }
+       });
+        
+       const response = await fetch(dataUrl);
+       const blob = await response.blob();
+       const file = new File([blob], `${filename}.png`, { type: 'image/png' });
+       
+       const shareData = {
+         files: [file],
+         title: `Struk ${store.name}`,
+         text: `Berikut adalah struk pesanan Anda (${order.orderNumber}) dari ${store.name}.`,
+       };
+ 
+       if (navigator.canShare && navigator.canShare(shareData)) {
+         await navigator.share(shareData);
+       } else {
+         // Fallback to download if sharing not supported
+         const link = document.createElement('a');
+         link.href = dataUrl;
+         link.download = `${filename}.png`;
+         link.click();
+         toast.success("Gambar struk telah diunduh");
        }
-     } else {
-       toast.error("Fitur berbagi tidak didukung di browser ini. Mengunduh PDF...");
-       handleDownloadPDF(blob);
+     } catch (error) {
+       console.error('Error generating image:', error);
+       toast.error("Gagal membuat gambar struk");
      }
    };
  
@@ -293,15 +316,17 @@
                 </div>
               </div>
   
-              <div className="text-center mt-10 mb-2">
+              <div className="text-center mt-10 mb-6">
                 <p className="text-[10px] font-bold italic tracking-wide">{store.receiptFooter || 'Terima Kasih!'}</p>
+                <p className="text-[10px] mt-1 italic opacity-80">jangan Lupa Follow Instagram Kami @ngangkring.kobibi !!</p>
+                <div className="h-4" /> {/* Extra spacing at the very bottom for image capture */}
               </div>
            </div>
          </div>
  
          <div className="p-4 border-t border-[var(--color-border)] bg-white shrink-0 grid grid-cols-2 gap-3 pb-safe">
            <button 
-             onClick={handleSharePDF}
+             onClick={handleShareImage}
              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-green-500 hover:bg-green-600 shadow-md shadow-green-500/20 active:scale-95 transition-all text-xs sm:text-sm group"
            >
              <MessageCircle size={18} className="group-hover:scale-110 transition-transform" />
