@@ -177,7 +177,7 @@
        const shareData = {
          files: [file],
          title: `Struk ${store.name}`,
-         text: `Berikut adalah struk pesanan Anda (${order.orderNumber}) dari ${store.name}.`,
+         text: filename,
        };
  
        if (navigator.canShare && navigator.canShare(shareData)) {
@@ -318,7 +318,7 @@
   
               <div className="text-center mt-10 mb-6">
                 <p className="text-[10px] font-bold italic tracking-wide">{store.receiptFooter || 'Terima Kasih!'}</p>
-                <p className="text-[10px] mt-1 italic opacity-80">jangan Lupa Follow Instagram Kami @ngangkring.kobibi !!</p>
+                <p className="text-[10px] font-bold mt-1 italic opacity-80">Jangan Lupa Follow Instagram Kami @ngangkring.kobibi !</p>
                 <div className="h-4" /> {/* Extra spacing at the very bottom for image capture */}
               </div>
            </div>
